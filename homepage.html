@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Travel Diary</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Progress Bar -->
+  <div id="progress-bar"></div>
+
+  <!-- Header -->
+  <header>
+    <h1>🌸 My Travel Diary</h1>
+    <p>Exploring the world one soft pastel moment at a time</p>
+  </header>
+
+  <!-- Slideshow -->
+  <section class="slideshow-container">
+    <div class="slide fade">
+      <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80" alt="Beach">
+      <div class="slide-text">Beach Paradise 🌊</div>
+    </div>
+    <div class="slide fade">
+      <img src="https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=800&q=80" alt="Mountains">
+      <div class="slide-text">Majestic Mountains ⛰️</div>
+    </div>
+    <div class="slide fade">
+      <img src="https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=800&q=80" alt="City">
+      <div class="slide-text">Vibrant Cities 🏙️</div>
+    </div>
+
+    <!-- Navigation Arrows -->
+    <a class="prev" onclick="changeSlide(-1)">❮</a>
+    <a class="next" onclick="changeSlide(1)">❯</a>
+  </section>
+
+  <!-- Profile Card -->
+  <section class="profile-card">
+    <img src="" alt="Profile">
+    <h2>Diena Sofea</h2>
+    <p>World traveler</p>
+  </section>
+
+  <!-- Collapsible Sections -->
+  <section class="collapsible-section">
+    <button class="collapsible">Asia Adventures</button>
+    <div class="content">
+      <p>Visited Japan, Thailand, and Vietnam. Amazing cultures and foods!</p>
+    </div>
+
+    <button class="collapsible">Europe Journeys</button>
+    <div class="content">
+      <p>From Italy to Norway, every country had its charm.</p>
+    </div>
+
+    <button class="collapsible">America Roadtrips</button>
+    <div class="content">
+      <p>USA and Canada roadtrips were full of breathtaking landscapes.</p>
+    </div>
+  </section>
+
+  <!-- Form on Image -->
+  <section class="form-section">
+    <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80" alt="Contact Background">
+    <form>
+      <h2>Contact Me</h2>
+      <input type="text" placeholder="Your Name" required>
+      <input type="email" placeholder="Your Email" required>
+      <textarea placeholder="Your Message" required></textarea>
+      <button type="submit">Send</button>
+    </form>
+  </section>
+
+  <script src="script.js"></script>
+</body>
+</html>
+
