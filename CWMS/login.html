@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login — AutoCare Workshop</title>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg: #0d0f14;
+      --surface: #161a23;
+      --surface2: #1e2333;
+      --accent: #e8a020;
+      --accent2: #f0c060;
+      --red: #e84040;
+      --blue: #4080e8;
+      --green: #40c880;
+      --text: #eef0f5;
+      --muted: #7a8099;
+      --border: rgba(255,255,255,0.07);
+    }
+
+    * { margin:0; padding:0; box-sizing:border-box; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .bg-grid {
+      position: fixed; inset: 0;
+      background-image:
+        linear-gradient(rgba(232,160,32,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(232,160,32,0.04) 1px, transparent 1px);
+      background-size: 48px 48px;
+      pointer-events: none;
+      animation: gridShift 20s linear infinite;
+    }
+    @keyframes gridShift { 0%{background-position:0 0} 100%{background-position:48px 48px} }
+
+    .bg-glow-1 {
+      position: fixed; top: -150px; left: -150px;
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, rgba(232,160,32,0.08) 0%, transparent 70%);
+      pointer-events: none; animation: drift1 12s ease-in-out infinite;
+    }
+    .bg-glow-2 {
+      position: fixed; bottom: -150px; right: -100px;
+      width: 400px; height: 400px;
+      background: radial-gradient(circle, rgba(64,128,232,0.06) 0%, transparent 70%);
+      pointer-events: none; animation: drift2 15s ease-in-out infinite;
+    }
+    @keyframes drift1 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(40px,30px)} }
+    @keyframes drift2 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(-30px,-40px)} }
+
+    .wrapper {
+      position: relative; z-index: 1;
+      width: 100%; max-width: 460px;
+      padding: 24px;
+      animation: fadeUp 0.5s ease;
+    }
+    @keyframes fadeUp {
+      from { opacity:0; transform:translateY(20px); }
+      to { opacity:1; transform:translateY(0); }
+    }
+
+    .logo-section { text-align: center; margin-bottom: 36px; }
+    .logo-mark {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 60px; height: 60px;
+      background: var(--accent); border-radius: 16px; font-size: 28px;
+      margin-bottom: 14px;
+      box-shadow: 0 8px 32px rgba(232,160,32,0.25);
+    }
+    .logo-name { font-family:'Barlow Condensed',sans-serif; font-size:28px; font-weight:800; letter-spacing:0.5px; }
+    .logo-name span { color: var(--accent); }
+    .logo-sub { font-size:13px; color:var(--muted); margin-top:4px; }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 32px;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.4);
+    }
+
+    .step { display: none; }
+    .step.active { display: block; }
+
+    .step-title { font-family:'Barlow Condensed',sans-serif; font-size:22px; font-weight:700; margin-bottom:6px; text-align:center; }
+    .step-title span { color: var(--accent); }
+    .step-sub { font-size:13px; color:var(--muted); text-align:center; margin-bottom:28px; }
+
+    .role-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:8px; }
+
+    .role-card {
+      background: var(--surface2);
+      border: 2px solid var(--border);
+      border-radius: 14px;
+      padding: 20px 16px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+    .role-card:hover { border-color:rgba(232,160,32,0.4); background:rgba(232,160,32,0.05); transform:translateY(-2px); }
+    .role-card.selected { border-color:var(--accent); background:rgba(232,160,32,0.08); }
+    .role-card .check {
+      position:absolute; top:10px; right:10px;
+      width:18px; height:18px; border-radius:50%;
+      background:var(--accent); display:none; align-items:center; justify-content:center;
+      font-size:10px; color:#0d0f14; font-weight:700;
+    }
+    .role-card.selected .check { display:flex; }
+    .role-icon { font-size:32px; margin-bottom:10px; }
+    .role-name { font-family:'Barlow Condensed',sans-serif; font-size:16px; font-weight:700; margin-bottom:4px; }
+    .role-desc { font-size:11px; color:var(--muted); line-height:1.4; }
+    .role-card.full { grid-column:1 / -1; display:flex; align-items:center; gap:14px; text-align:left; padding:16px 20px; }
+    .role-card.full .role-icon { font-size:28px; flex-shrink:0; }
+    .role-card.full .role-text { flex:1; }
+
+    .divider { display:flex; align-items:center; gap:12px; margin:20px 0; color:var(--muted); font-size:12px; }
+    .divider::before,.divider::after { content:''; flex:1; height:1px; background:var(--border); }
+
+    .form-group { margin-bottom:16px; }
+    .form-label { display:block; font-size:12px; font-weight:500; color:var(--muted); margin-bottom:6px; letter-spacing:0.5px; text-transform:uppercase; }
+    .form-input {
+      width:100%; background:var(--surface2); border:1px solid var(--border);
+      border-radius:10px; padding:11px 14px; font-size:14px; color:var(--text);
+      font-family:'DM Sans',sans-serif; outline:none; transition:border-color 0.2s, box-shadow 0.2s;
+    }
+    .form-input:focus { border-color:rgba(232,160,32,0.5); box-shadow:0 0 0 3px rgba(232,160,32,0.08); }
+    .form-input::placeholder { color:var(--muted); }
+    .input-hint { font-size:11px; color:var(--muted); margin-top:5px; }
+
+    .btn {
+      width:100%; padding:12px; border-radius:10px; font-size:14px; font-weight:600;
+      cursor:pointer; border:none; transition:all 0.2s; font-family:'DM Sans',sans-serif; letter-spacing:0.3px;
+    }
+    .btn-primary { background:var(--accent); color:#0d0f14; }
+    .btn-primary:hover { background:var(--accent2); transform:translateY(-1px); box-shadow:0 8px 24px rgba(232,160,32,0.2); }
+    .btn-primary:disabled { opacity:0.4; cursor:not-allowed; transform:none; }
+    .btn-outline { background:transparent; color:var(--text); border:1px solid var(--border); margin-top:10px; }
+    .btn-outline:hover { background:var(--surface2); }
+
+    .back-link {
+      display:flex; align-items:center; gap:6px;
+      font-size:13px; color:var(--muted); cursor:pointer;
+      margin-bottom:20px; width:fit-content; transition:color 0.2s;
+    }
+    .back-link:hover { color:var(--text); }
+
+    .customer-opts { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:4px; }
+    .cust-btn {
+      padding:16px; border-radius:12px; border:2px solid var(--border);
+      background:var(--surface2); cursor:pointer; transition:all 0.2s;
+      font-family:'DM Sans',sans-serif; text-align:center;
+    }
+    .cust-btn:hover { border-color:rgba(232,160,32,0.4); transform:translateY(-2px); }
+    .cust-btn .cust-icon { font-size:26px; margin-bottom:8px; }
+    .cust-btn .cust-name { font-family:'Barlow Condensed',sans-serif; font-size:16px; font-weight:700; margin-bottom:3px; }
+    .cust-btn .cust-desc { font-size:11px; color:var(--muted); }
+    .cust-btn.login-btn:hover { border-color:var(--green); background:rgba(64,200,128,0.06); }
+    .cust-btn.register-btn:hover { border-color:var(--accent); background:rgba(232,160,32,0.06); }
+
+    .role-tag {
+      padding:4px 14px; border-radius:20px; font-size:12px; font-weight:500;
+      width:fit-content; margin:0 auto 20px; display:flex; align-items:center; gap:6px;
+    }
+
+    .error-msg {
+      background:rgba(232,64,64,0.1); border:1px solid rgba(232,64,64,0.2);
+      border-radius:8px; padding:10px 14px; font-size:13px; color:var(--red);
+      margin-bottom:16px; display:none;
+    }
+
+    .footer-note { text-align:center; font-size:12px; color:var(--muted); margin-top:20px; }
+
+    .input-wrap { position:relative; }
+    .toggle-pw {
+      position:absolute; right:12px; top:50%; transform:translateY(-50%);
+      cursor:pointer; font-size:16px; color:var(--muted);
+      background:none; border:none; padding:0; transition:color 0.2s;
+    }
+    .toggle-pw:hover { color:var(--text); }
+
+    @keyframes slideEnter { from{opacity:0;transform:translateX(16px)} to{opacity:1;transform:translateX(0)} }
+    @keyframes slideBack  { from{opacity:0;transform:translateX(-16px)} to{opacity:1;transform:translateX(0)} }
+  </style>
+</head>
+<body>
+
+  <div class="bg-grid"></div>
+  <div class="bg-glow-1"></div>
+  <div class="bg-glow-2"></div>
+
+  <div class="wrapper">
+    <div class="logo-section">
+      <div class="logo-mark">🔧</div>
+      <div class="logo-name">Auto<span>Care</span> WMS</div>
+      <div class="logo-sub">Workshop Management System</div>
+    </div>
+
+    <div class="card">
+
+      <!-- STEP 1: CHOOSE ROLE -->
+      <div class="step active" id="step-role">
+        <div class="step-title">Who are <span>you?</span></div>
+        <div class="step-sub">Pilih peranan anda untuk teruskan</div>
+
+        <div class="role-grid">
+          <div class="role-card" id="rc-admin" onclick="selectRole('admin', this)">
+            <div class="check">✓</div>
+            <div class="role-icon">👨‍💼</div>
+            <div class="role-name">Admin</div>
+            <div class="role-desc">Akses penuh kepada semua modul</div>
+          </div>
+          <div class="role-card" id="rc-mechanic" onclick="selectRole('mechanic', this)">
+            <div class="check">✓</div>
+            <div class="role-icon">🔧</div>
+            <div class="role-name">Mechanic</div>
+            <div class="role-desc">Pekerja bengkel berdaftar</div>
+          </div>
+          <div class="role-card full" onclick="goToCustomer()">
+            <div class="role-icon">🚗</div>
+            <div class="role-text">
+              <div class="role-name">Customer</div>
+              <div class="role-desc">Log masuk atau daftar sebagai pelanggan baharu</div>
+            </div>
+            <div style="color:var(--muted);font-size:18px">→</div>
+          </div>
+        </div>
+
+        <button class="btn btn-primary" id="roleNextBtn" disabled onclick="goToStaffLogin()" style="margin-top:20px">
+          Teruskan →
+        </button>
+        <div class="footer-note">Hanya Admin & Mechanic yang telah didaftarkan boleh log masuk.</div>
+      </div>
+
+      <!-- STEP 2A: STAFF LOGIN -->
+      <div class="step" id="step-staff">
+        <div class="back-link" onclick="goBack('step-role')">← Kembali</div>
+        <div id="staffRoleTag" class="role-tag"></div>
+        <div class="step-title" style="margin-bottom:6px">Log Masuk</div>
+        <div class="step-sub">Guna Working ID dan password anda</div>
+
+        <div class="error-msg" id="staffError">❌ Working ID atau password tidak sah. Cuba semula.</div>
+
+        <div class="form-group">
+          <label class="form-label">Working ID</label>
+          <input class="form-input" type="text" id="staffId" placeholder="Contoh: ADM001 / MEC001" autocomplete="off"/>
+          <div class="input-hint">Diberikan oleh pihak pengurusan bengkel</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <div class="input-wrap">
+            <input class="form-input" type="password" id="staffPw" placeholder="Masukkan password" style="padding-right:42px"/>
+            <button class="toggle-pw" onclick="togglePw('staffPw', this)" type="button">👁️</button>
+          </div>
+        </div>
+
+        <div style="background:rgba(232,160,32,0.06);border:1px solid rgba(232,160,32,0.15);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.7">
+          <b style="color:var(--accent)">Demo credentials:</b><br>
+          Admin: <b style="color:var(--text)">ADM001</b> / <b style="color:var(--text)">admin123</b><br>
+          Mechanic: <b style="color:var(--text)">MEC001</b> / <b style="color:var(--text)">mec123</b> &nbsp;|&nbsp; <b style="color:var(--text)">MEC002</b> / <b style="color:var(--text)">mec456</b>
+        </div>
+
+        <button class="btn btn-primary" onclick="staffLogin()">Log Masuk</button>
+        <button class="btn btn-outline" onclick="goBack('step-role')">Batal</button>
+      </div>
+
+      <!-- STEP 2B: CUSTOMER OPTIONS -->
+      <div class="step" id="step-customer">
+        <div class="back-link" onclick="goBack('step-role')">← Kembali</div>
+        <div class="step-title">Pelanggan</div>
+        <div class="step-sub">Adakah anda pelanggan baru atau telah berdaftar?</div>
+
+        <div class="customer-opts">
+          <div class="cust-btn login-btn" onclick="goToCustomerLogin()">
+            <div class="cust-icon">🔑</div>
+            <div class="cust-name">Log Masuk</div>
+            <div class="cust-desc">Sudah ada akaun</div>
+          </div>
+          <div class="cust-btn register-btn" onclick="window.location.href='register.html'">
+            <div class="cust-icon">✨</div>
+            <div class="cust-name">Daftar</div>
+            <div class="cust-desc">Pelanggan baharu</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 2C: CUSTOMER LOGIN -->
+      <div class="step" id="step-custlogin">
+        <div class="back-link" onclick="goBack('step-customer')">← Kembali</div>
+
+        <div class="role-tag" style="background:rgba(64,200,128,0.1);color:var(--green)">
+          🚗 Customer Login
+        </div>
+
+        <div class="step-title" style="margin-bottom:6px">Log Masuk</div>
+        <div class="step-sub">Guna email atau nombor telefon anda</div>
+
+        <div class="error-msg" id="custError">❌ Akaun tidak dijumpai atau password salah. Sila daftar terlebih dahulu.</div>
+
+        <div class="form-group">
+          <label class="form-label">Email / No. Telefon</label>
+          <input class="form-input" type="text" id="custId" placeholder="example@email.com atau 01X-XXXXXXX"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <div class="input-wrap">
+            <input class="form-input" type="password" id="custPw" placeholder="Masukkan password" style="padding-right:42px"/>
+            <button class="toggle-pw" onclick="togglePw('custPw', this)" type="button">👁️</button>
+          </div>
+        </div>
+
+        <button class="btn btn-primary" onclick="customerLogin()">Log Masuk</button>
+
+        <div class="divider">atau</div>
+        <div style="text-align:center;font-size:13px;color:var(--muted)">
+          Belum ada akaun?
+          <a href="register.html" style="color:var(--accent);text-decoration:none;font-weight:500"> Daftar sekarang →</a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    let selectedRole = null;
+
+    // Staff accounts — dummy values, replace with DB later
+    const staffAccounts = [
+      { id: 'ADM001', pw: 'admin123', role: 'admin',    name: 'Admin'   },
+      { id: 'MEC001', pw: 'mec123',   role: 'mechanic', name: 'Rizal'   },
+      { id: 'MEC002', pw: 'mec456',   role: 'mechanic', name: 'Hafiz'   },
+    ];
+
+    // ── Helpers ──────────────────────────────────────────────
+    function getCustomers() {
+      try { return JSON.parse(localStorage.getItem('wms_customers') || '[]'); }
+      catch(e) { return []; }
+    }
+
+    function selectRole(role, el) {
+      selectedRole = role;
+      document.querySelectorAll('.role-card:not(.full)').forEach(c => c.classList.remove('selected'));
+      el.classList.add('selected');
+      document.getElementById('roleNextBtn').disabled = false;
+    }
+
+    function goToStaffLogin() {
+      if (!selectedRole) return;
+      const tagEl = document.getElementById('staffRoleTag');
+      if (selectedRole === 'admin') {
+        tagEl.style.cssText = 'background:rgba(232,160,32,0.1);color:var(--accent);width:fit-content;margin:0 auto 20px;padding:4px 14px;border-radius:20px;font-size:12px;font-weight:500;display:flex;align-items:center;gap:6px;';
+        tagEl.innerHTML = '👨‍💼 Admin Login';
+      } else {
+        tagEl.style.cssText = 'background:rgba(64,128,232,0.1);color:#4080e8;width:fit-content;margin:0 auto 20px;padding:4px 14px;border-radius:20px;font-size:12px;font-weight:500;display:flex;align-items:center;gap:6px;';
+        tagEl.innerHTML = '🔧 Mechanic Login';
+      }
+      showStep('step-staff');
+    }
+
+    function goToCustomer() {
+      selectedRole = 'customer';
+      showStep('step-customer');
+    }
+
+    function goToCustomerLogin() { showStep('step-custlogin'); }
+
+    function goBack(targetStep) {
+      document.getElementById('staffError').style.display = 'none';
+      document.getElementById('custError').style.display = 'none';
+      showStep(targetStep, true);
+    }
+
+    function showStep(stepId, isBack = false) {
+      document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+      const el = document.getElementById(stepId);
+      el.classList.add('active');
+      el.style.animation = 'none';
+      el.offsetHeight;
+      el.style.animation = isBack ? 'slideBack 0.3s ease' : 'slideEnter 0.3s ease';
+    }
+
+    function togglePw(inputId, btn) {
+      const input = document.getElementById(inputId);
+      input.type = input.type === 'password' ? 'text' : 'password';
+      btn.textContent = input.type === 'password' ? '👁️' : '🙈';
+    }
+
+    // ── Staff Login ───────────────────────────────────────────
+    function staffLogin() {
+      const id   = document.getElementById('staffId').value.trim().toUpperCase();
+      const pw   = document.getElementById('staffPw').value;
+      const errEl = document.getElementById('staffError');
+
+      const match = staffAccounts.find(a =>
+        a.id === id && a.pw === pw && a.role === selectedRole
+      );
+
+      if (match) {
+        errEl.style.display = 'none';
+        sessionStorage.setItem('wms_user', JSON.stringify({
+          name: match.name, role: match.role, id: match.id
+        }));
+        window.location.href = 'homepage.html';
+      } else {
+        errEl.style.display = 'block';
+        document.getElementById('staffPw').value = '';
+      }
+    }
+
+    // ── Customer Login ────────────────────────────────────────
+    function customerLogin() {
+      const id    = document.getElementById('custId').value.trim().toLowerCase();
+      const pw    = document.getElementById('custPw').value;
+      const errEl = document.getElementById('custError');
+
+      const customers = getCustomers();
+      const match = customers.find(c =>
+        (c.email.toLowerCase() === id || c.phone.toLowerCase() === id) && c.pw === pw
+      );
+
+      if (match) {
+        errEl.style.display = 'none';
+        sessionStorage.setItem('wms_user', JSON.stringify({
+          name: match.name, role: 'customer', id: match.email
+        }));
+        window.location.href = 'homepage.html';
+      } else {
+        errEl.style.display = 'block';
+        document.getElementById('custPw').value = '';
+      }
+    }
+
+    // Enter key support
+    document.addEventListener('keydown', function(e) {
+      if (e.key !== 'Enter') return;
+      const active = document.querySelector('.step.active').id;
+      if (active === 'step-staff')     staffLogin();
+      if (active === 'step-custlogin') customerLogin();
+    });
+  </script>
+</body>
+</html>

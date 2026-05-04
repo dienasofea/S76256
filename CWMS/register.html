@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Register Account — AutoCare Workshop</title>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg: #0d0f14; --surface: #161a23; --surface2: #1e2333;
+      --accent: #e8a020; --accent2: #f0c060;
+      --red: #e84040; --green: #40c880;
+      --text: #eef0f5; --muted: #7a8099; --border: rgba(255,255,255,0.07);
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      background:var(--bg); color:var(--text);
+      font-family:'DM Sans',sans-serif; min-height:100vh;
+      display:flex; align-items:center; justify-content:center;
+      padding:32px 24px; position:relative;
+    }
+    .bg-grid {
+      position:fixed; inset:0;
+      background-image:
+        linear-gradient(rgba(232,160,32,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(232,160,32,0.04) 1px, transparent 1px);
+      background-size:48px 48px; pointer-events:none;
+      animation:gridShift 20s linear infinite;
+    }
+    @keyframes gridShift { 0%{background-position:0 0} 100%{background-position:48px 48px} }
+    .bg-glow { position:fixed; bottom:-100px; right:-100px; width:400px; height:400px; background:radial-gradient(circle, rgba(232,160,32,0.07) 0%, transparent 70%); pointer-events:none; }
+    .wrapper { position:relative; z-index:1; width:100%; max-width:480px; animation:fadeUp 0.5s ease; }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+
+    .logo-section { text-align:center; margin-bottom:28px; }
+    .logo-mark { display:inline-flex; align-items:center; justify-content:center; width:52px; height:52px; background:var(--accent); border-radius:14px; font-size:24px; margin-bottom:12px; box-shadow:0 8px 24px rgba(232,160,32,0.2); }
+    .logo-name { font-family:'Barlow Condensed',sans-serif; font-size:24px; font-weight:800; }
+    .logo-name span { color:var(--accent); }
+    .logo-sub { font-size:12px; color:var(--muted); margin-top:3px; }
+
+    .card { background:var(--surface); border:1px solid var(--border); border-radius:20px; padding:32px; box-shadow:0 24px 64px rgba(0,0,0,0.35); }
+    .card-title { font-family:'Barlow Condensed',sans-serif; font-size:22px; font-weight:800; margin-bottom:4px; }
+    .card-title span { color:var(--accent); }
+    .card-sub { font-size:13px; color:var(--muted); margin-bottom:24px; }
+
+    .progress-bar { display:flex; gap:6px; margin-bottom:28px; }
+    .prog-step { flex:1; height:4px; border-radius:4px; background:var(--surface2); transition:background 0.3s; }
+    .prog-step.done { background:var(--accent); }
+    .prog-step.active { background:var(--accent2); }
+    .prog-label { font-size:11px; color:var(--muted); margin-bottom:20px; display:flex; justify-content:space-between; }
+
+    .step { display:none; }
+    .step.active { display:block; animation:slideEnter 0.3s ease; }
+    @keyframes slideEnter { from{opacity:0;transform:translateX(12px)} to{opacity:1;transform:translateX(0)} }
+
+    .form-row { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+    .form-group { margin-bottom:16px; }
+    .form-label { display:block; font-size:11px; font-weight:500; color:var(--muted); margin-bottom:6px; letter-spacing:0.5px; text-transform:uppercase; }
+    .form-label .req { color:var(--accent); }
+    .form-input { width:100%; background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:11px 14px; font-size:14px; color:var(--text); font-family:'DM Sans',sans-serif; outline:none; transition:border-color 0.2s, box-shadow 0.2s; }
+    .form-input:focus { border-color:rgba(232,160,32,0.5); box-shadow:0 0 0 3px rgba(232,160,32,0.08); }
+    .form-input::placeholder { color:var(--muted); }
+    .form-input.error { border-color:rgba(232,64,64,0.5); }
+    .input-hint { font-size:11px; color:var(--muted); margin-top:5px; }
+    .input-err { font-size:11px; color:var(--red); margin-top:5px; display:none; }
+    select.form-input { cursor:pointer; }
+    select.form-input option { background:var(--surface2); }
+
+    .pw-strength { margin-top:8px; }
+    .pw-bars { display:flex; gap:4px; margin-bottom:4px; }
+    .pw-bar { flex:1; height:3px; border-radius:3px; background:var(--surface2); transition:background 0.3s; }
+    .pw-bar.weak { background:var(--red); }
+    .pw-bar.medium { background:var(--accent); }
+    .pw-bar.strong { background:var(--green); }
+    .pw-text { font-size:11px; color:var(--muted); }
+
+    .input-wrap { position:relative; }
+    .toggle-pw { position:absolute; right:12px; top:50%; transform:translateY(-50%); cursor:pointer; font-size:16px; color:var(--muted); background:none; border:none; padding:0; transition:color 0.2s; }
+    .toggle-pw:hover { color:var(--text); }
+
+    .btn-row { display:flex; gap:10px; margin-top:4px; }
+    .btn { flex:1; padding:12px; border-radius:10px; font-size:14px; font-weight:600; cursor:pointer; border:none; transition:all 0.2s; font-family:'DM Sans',sans-serif; }
+    .btn-primary { background:var(--accent); color:#0d0f14; }
+    .btn-primary:hover { background:var(--accent2); transform:translateY(-1px); box-shadow:0 8px 24px rgba(232,160,32,0.2); }
+    .btn-secondary { background:var(--surface2); color:var(--text); border:1px solid var(--border); }
+    .btn-secondary:hover { background:var(--surface); }
+
+    .global-error { background:rgba(232,64,64,0.1); border:1px solid rgba(232,64,64,0.2); border-radius:8px; padding:10px 14px; font-size:13px; color:var(--red); margin-bottom:16px; display:none; }
+
+    .success-screen { text-align:center; padding:16px 0; }
+    .success-icon { width:72px; height:72px; background:rgba(64,200,128,0.12); border:2px solid var(--green); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:32px; margin:0 auto 20px; animation:popIn 0.4s ease; }
+    @keyframes popIn { from{transform:scale(0.5);opacity:0} to{transform:scale(1);opacity:1} }
+    .success-title { font-family:'Barlow Condensed',sans-serif; font-size:26px; font-weight:800; margin-bottom:8px; }
+    .success-title span { color:var(--green); }
+    .success-sub { font-size:13px; color:var(--muted); line-height:1.6; margin-bottom:24px; }
+
+    .info-box { background:var(--surface2); border:1px solid var(--border); border-radius:12px; padding:16px; text-align:left; margin-bottom:20px; }
+    .info-row { display:flex; justify-content:space-between; padding:5px 0; font-size:13px; border-bottom:1px solid var(--border); }
+    .info-row:last-child { border-bottom:none; }
+    .info-row .key { color:var(--muted); }
+    .info-row .val { font-weight:500; }
+
+    .login-link { text-align:center; font-size:13px; color:var(--muted); margin-top:20px; }
+    .login-link a { color:var(--accent); text-decoration:none; font-weight:500; }
+    .login-link a:hover { text-decoration:underline; }
+  </style>
+</head>
+<body>
+  <div class="bg-grid"></div>
+  <div class="bg-glow"></div>
+
+  <div class="wrapper">
+    <div class="logo-section">
+      <div class="logo-mark">🔧</div>
+      <div class="logo-name">Auto<span>Care</span> WMS</div>
+      <div class="logo-sub">Workshop Management System</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title" id="cardTitle">Daftar <span>Akaun</span></div>
+      <div class="card-sub" id="cardSub">Pelanggan baharu — isi maklumat di bawah</div>
+
+      <div class="progress-bar" id="progressBar">
+        <div class="prog-step active" id="pb1"></div>
+        <div class="prog-step" id="pb2"></div>
+        <div class="prog-step" id="pb3"></div>
+      </div>
+      <div class="prog-label" id="progLabel">
+        <span id="stepLabel">Langkah 1 / 3 — Maklumat Peribadi</span>
+      </div>
+
+      <!-- STEP 1: Personal Info -->
+      <div class="step active" id="s1">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Nama Penuh <span class="req">*</span></label>
+            <input class="form-input" type="text" id="fullname" placeholder="Nama seperti IC"/>
+            <div class="input-err" id="err-fullname">Sila masukkan nama penuh</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">No. IC <span class="req">*</span></label>
+            <input class="form-input" type="text" id="ic" placeholder="XXXXXX-XX-XXXX" maxlength="14" oninput="formatIC(this)"/>
+            <div class="input-err" id="err-ic">Format IC tidak sah</div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Jantina <span class="req">*</span></label>
+          <select class="form-input" id="gender">
+            <option value="">-- Pilih --</option>
+            <option value="L">Lelaki</option>
+            <option value="P">Perempuan</option>
+          </select>
+          <div class="input-err" id="err-gender">Sila pilih jantina</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Alamat</label>
+          <input class="form-input" type="text" id="address" placeholder="Alamat tempat tinggal"/>
+        </div>
+        <div class="btn-row">
+          <a href="login.html" class="btn btn-secondary" style="text-align:center;text-decoration:none;display:flex;align-items:center;justify-content:center">← Kembali</a>
+          <button class="btn btn-primary" onclick="nextStep(1)">Seterusnya →</button>
+        </div>
+      </div>
+
+      <!-- STEP 2: Contact & Vehicle -->
+      <div class="step" id="s2">
+        <div class="form-group">
+          <label class="form-label">No. Telefon <span class="req">*</span></label>
+          <input class="form-input" type="tel" id="phone" placeholder="01X-XXXXXXX"/>
+          <div class="input-err" id="err-phone">Sila masukkan nombor telefon yang sah</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Emel <span class="req">*</span></label>
+          <input class="form-input" type="email" id="email" placeholder="example@email.com"/>
+          <div class="input-err" id="err-email">Sila masukkan emel yang sah</div>
+        </div>
+        <div style="border-top:1px solid var(--border);margin:16px 0;padding-top:16px">
+          <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px">Maklumat Kenderaan</div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">No. Plat <span class="req">*</span></label>
+            <input class="form-input" type="text" id="plate" placeholder="WXY 1234" oninput="this.value=this.value.toUpperCase()"/>
+            <div class="input-err" id="err-plate">Sila masukkan no. plat</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Jenis Kenderaan</label>
+            <select class="form-input" id="cartype">
+              <option value="">-- Pilih --</option>
+              <option>Sedan</option><option>SUV / 4WD</option><option>MPV</option>
+              <option>Hatchback</option><option>Pickup Truck</option><option>Van</option><option>Motosikal</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Jenama Kereta</label>
+            <input class="form-input" type="text" id="carbrand" placeholder="Proton, Perodua..."/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Model</label>
+            <input class="form-input" type="text" id="carmodel" placeholder="Saga, Myvi..."/>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-secondary" onclick="prevStep(2)">← Kembali</button>
+          <button class="btn btn-primary" onclick="nextStep(2)">Seterusnya →</button>
+        </div>
+      </div>
+
+      <!-- STEP 3: Password -->
+      <div class="step" id="s3">
+        <div class="global-error" id="globalErr"></div>
+        <div class="form-group">
+          <label class="form-label">Password <span class="req">*</span></label>
+          <div class="input-wrap">
+            <input class="form-input" type="password" id="pw1" placeholder="Cipta password" oninput="checkStrength(this.value)" style="padding-right:42px"/>
+            <button class="toggle-pw" onclick="togglePw('pw1', this)" type="button">👁️</button>
+          </div>
+          <div class="pw-strength">
+            <div class="pw-bars">
+              <div class="pw-bar" id="pwb1"></div>
+              <div class="pw-bar" id="pwb2"></div>
+              <div class="pw-bar" id="pwb3"></div>
+            </div>
+            <div class="pw-text" id="pwText">Masukkan password</div>
+          </div>
+          <div class="input-err" id="err-pw1">Password mesti sekurang-kurangnya 6 aksara</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Ulang Password <span class="req">*</span></label>
+          <div class="input-wrap">
+            <input class="form-input" type="password" id="pw2" placeholder="Taip semula password" style="padding-right:42px"/>
+            <button class="toggle-pw" onclick="togglePw('pw2', this)" type="button">👁️</button>
+          </div>
+          <div class="input-err" id="err-pw2">Password tidak sepadan</div>
+        </div>
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:16px;font-size:12px;color:var(--muted);line-height:1.7">
+          ✅ Sekurang-kurangnya 6 aksara<br>
+          ✅ Gabungan huruf dan nombor disyorkan<br>
+          ✅ Jangan kongsi password dengan sesiapa
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-secondary" onclick="prevStep(3)">← Kembali</button>
+          <button class="btn btn-primary" onclick="submitRegister()">Daftar Sekarang ✓</button>
+        </div>
+      </div>
+
+      <!-- SUCCESS -->
+      <div class="step" id="s-success">
+        <div class="success-screen">
+          <div class="success-icon">✓</div>
+          <div class="success-title">Berjaya <span>Didaftarkan!</span></div>
+          <div class="success-sub">Akaun anda telah berjaya dicipta. Anda kini boleh log masuk ke sistem.</div>
+          <div class="info-box" id="successInfo"></div>
+          <button class="btn btn-primary" onclick="window.location.href='login.html'" style="width:100%">Log Masuk Sekarang →</button>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="login-link" id="loginLinkBottom">
+      Sudah ada akaun? <a href="login.html">Log masuk di sini</a>
+    </div>
+  </div>
+
+  <script>
+    let currentStep = 1;
+
+    const stepLabels = [
+      '', 'Langkah 1 / 3 — Maklumat Peribadi',
+      'Langkah 2 / 3 — Hubungi & Kenderaan',
+      'Langkah 3 / 3 — Tetapkan Password'
+    ];
+
+    function updateProgress(step) {
+      for (let i = 1; i <= 3; i++) {
+        const el = document.getElementById('pb' + i);
+        el.className = 'prog-step';
+        if (i < step) el.classList.add('done');
+        else if (i === step) el.classList.add('active');
+      }
+      document.getElementById('stepLabel').textContent = stepLabels[step] || '';
+    }
+
+    function showStep(n) {
+      document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+      const el = document.getElementById('s' + n);
+      if (el) { el.classList.add('active'); currentStep = n; updateProgress(n); }
+    }
+
+    function nextStep(from) { if (validateStep(from)) showStep(from + 1); }
+    function prevStep(from) { showStep(from - 1); }
+
+    function validateStep(step) {
+      let valid = true;
+
+      function err(id, msg, show) {
+        const errEl = document.getElementById('err-' + id);
+        const inp   = document.getElementById(id);
+        if (show) {
+          errEl.style.display = 'block';
+          errEl.textContent = msg;
+          if (inp) inp.classList.add('error');
+          valid = false;
+        } else {
+          errEl.style.display = 'none';
+          if (inp) inp.classList.remove('error');
+        }
+      }
+
+      if (step === 1) {
+        const name   = document.getElementById('fullname').value.trim();
+        const ic     = document.getElementById('ic').value.trim();
+        const gender = document.getElementById('gender').value;
+        err('fullname', 'Sila masukkan nama penuh', name.length < 2);
+        err('ic',       'Format IC tidak sah (contoh: 900101-12-3456)', !ic.match(/^\d{6}-\d{2}-\d{4}$/));
+        err('gender',   'Sila pilih jantina', !gender);
+      }
+
+      if (step === 2) {
+        const phone = document.getElementById('phone').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const plate = document.getElementById('plate').value.trim();
+        err('phone', 'Sila masukkan nombor telefon yang sah', !phone.match(/^01[0-9]-?\d{7,8}$/));
+        err('email', 'Sila masukkan emel yang sah', !email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/));
+        err('plate', 'Sila masukkan no. plat kenderaan', plate.length < 3);
+
+        // Check duplicate email
+        if (email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+          const customers = getCustomers();
+          const dupEmail = customers.find(c => c.email.toLowerCase() === email.toLowerCase());
+          if (dupEmail) {
+            err('email', 'Emel ini sudah didaftarkan. Sila log masuk.', true);
+          }
+        }
+      }
+
+      if (step === 3) {
+        const pw1 = document.getElementById('pw1').value;
+        const pw2 = document.getElementById('pw2').value;
+        err('pw1', 'Password mesti sekurang-kurangnya 6 aksara', pw1.length < 6);
+        if (pw1.length >= 6) err('pw2', 'Password tidak sepadan', pw1 !== pw2);
+      }
+
+      return valid;
+    }
+
+    function getCustomers() {
+      try { return JSON.parse(localStorage.getItem('wms_customers') || '[]'); }
+      catch(e) { return []; }
+    }
+
+    function saveCustomers(list) {
+      localStorage.setItem('wms_customers', JSON.stringify(list));
+    }
+
+    function formatIC(input) {
+      let v = input.value.replace(/[^0-9]/g, '');
+      if (v.length > 6) v = v.slice(0,6) + '-' + v.slice(6);
+      if (v.length > 9) v = v.slice(0,9) + '-' + v.slice(9);
+      input.value = v.slice(0, 14);
+    }
+
+    function checkStrength(pw) {
+      const bars = ['pwb1','pwb2','pwb3'].map(id => document.getElementById(id));
+      const txt  = document.getElementById('pwText');
+      bars.forEach(b => b.className = 'pw-bar');
+      if (!pw.length) { txt.textContent = 'Masukkan password'; txt.style.color = 'var(--muted)'; return; }
+      let score = 0;
+      if (pw.length >= 6)  score++;
+      if (pw.length >= 10) score++;
+      if (/[A-Z]/.test(pw) && /[0-9]/.test(pw)) score++;
+      if (score === 1) { bars[0].classList.add('weak');   txt.textContent = '⚠️ Lemah';      txt.style.color = 'var(--red)'; }
+      else if (score === 2) { bars[0].classList.add('medium'); bars[1].classList.add('medium'); txt.textContent = '👍 Sederhana'; txt.style.color = 'var(--accent)'; }
+      else { bars.forEach(b => b.classList.add('strong')); txt.textContent = '✅ Kuat'; txt.style.color = 'var(--green)'; }
+    }
+
+    function togglePw(id, btn) {
+      const inp = document.getElementById(id);
+      inp.type = inp.type === 'password' ? 'text' : 'password';
+      btn.textContent = inp.type === 'password' ? '👁️' : '🙈';
+    }
+
+    function submitRegister() {
+      if (!validateStep(3)) return;
+
+      const name     = document.getElementById('fullname').value.trim();
+      const ic       = document.getElementById('ic').value.trim();
+      const gender   = document.getElementById('gender').value;
+      const address  = document.getElementById('address').value.trim();
+      const phone    = document.getElementById('phone').value.trim();
+      const email    = document.getElementById('email').value.trim();
+      const plate    = document.getElementById('plate').value.trim().toUpperCase();
+      const cartype  = document.getElementById('cartype').value;
+      const carbrand = document.getElementById('carbrand').value.trim();
+      const carmodel = document.getElementById('carmodel').value.trim();
+      const pw       = document.getElementById('pw1').value;
+
+      // Save to localStorage
+      const customers = getCustomers();
+      customers.push({ name, ic, gender, address, phone, email, plate, cartype, carbrand, carmodel, pw, registeredAt: new Date().toISOString() });
+      saveCustomers(customers);
+
+      // Show success
+      document.getElementById('successInfo').innerHTML = `
+        <div class="info-row"><span class="key">Nama</span><span class="val">${name}</span></div>
+        <div class="info-row"><span class="key">Email</span><span class="val">${email}</span></div>
+        <div class="info-row"><span class="key">Telefon</span><span class="val">${phone}</span></div>
+        <div class="info-row"><span class="key">No. Plat</span><span class="val">${plate}</span></div>
+        <div class="info-row"><span class="key">Kenderaan</span><span class="val">${[carbrand, carmodel].filter(Boolean).join(' ') || '—'}</span></div>
+      `;
+
+      document.getElementById('progressBar').style.display = 'none';
+      document.getElementById('progLabel').style.display   = 'none';
+      document.getElementById('cardTitle').style.display   = 'none';
+      document.getElementById('cardSub').style.display     = 'none';
+      document.getElementById('loginLinkBottom').style.display = 'none';
+
+      document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+      document.getElementById('s-success').classList.add('active');
+    }
+  </script>
+</body>
+</html>

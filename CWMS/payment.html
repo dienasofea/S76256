@@ -1,0 +1,1202 @@
+<<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Manage Payment — AutoCare WMS</title>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg: #0d0f14; --surface: #161a23; --surface2: #1e2333;
+      --accent: #e8a020; --accent2: #f0c060;
+      --red: #e84040; --blue: #4080e8; --green: #40c880; --purple: #a060e8;
+      --text: #eef0f5; --muted: #7a8099; --border: rgba(255,255,255,0.07);
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif; min-height:100vh; overflow-x:hidden; }
+    body::before { content:''; position:fixed; inset:0; background-image:linear-gradient(rgba(64,200,128,0.025) 1px, transparent 1px),linear-gradient(90deg, rgba(64,200,128,0.025) 1px, transparent 1px); background-size:40px 40px; pointer-events:none; z-index:0; }
+    body::after { content:''; position:fixed; top:-200px; left:50%; transform:translateX(-50%); width:600px; height:400px; background:radial-gradient(ellipse, rgba(64,200,128,0.08) 0%, transparent 70%); pointer-events:none; z-index:0; }
+
+    .sidebar { position:fixed; left:0; top:0; bottom:0; width:220px; background:var(--surface); border-right:1px solid var(--border); display:flex; flex-direction:column; z-index:10; }
+    .logo-area { padding:28px 24px 24px; border-bottom:1px solid var(--border); }
+    .logo-icon { width:40px; height:40px; background:var(--accent); border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:20px; margin-bottom:12px; }
+    .logo-text { font-family:'Barlow Condensed',sans-serif; font-size:20px; font-weight:800; letter-spacing:0.5px; line-height:1.1; color:var(--text); }
+    .logo-text span { display:block; font-size:11px; font-weight:400; color:var(--muted); letter-spacing:1px; text-transform:uppercase; font-family:'DM Sans',sans-serif; margin-top:2px; }
+    .nav-section { flex:1; padding:20px 12px; overflow-y:auto; }
+    .nav-label { font-size:10px; text-transform:uppercase; letter-spacing:1.5px; color:var(--muted); padding:0 12px; margin-bottom:8px; margin-top:16px; }
+    .nav-item { display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:8px; cursor:pointer; font-size:14px; font-weight:400; color:var(--muted); transition:all 0.2s; text-decoration:none; position:relative; }
+    .nav-item:hover { background:var(--surface2); color:var(--text); }
+    .nav-item.active { background:rgba(64,200,128,0.12); color:var(--green); font-weight:500; }
+    .nav-item.active::before { content:''; position:absolute; left:0; top:8px; bottom:8px; width:3px; background:var(--green); border-radius:0 3px 3px 0; }
+    .nav-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+    .sidebar-footer { padding:16px 20px; border-top:1px solid var(--border); }
+    .user-card { display:flex; align-items:center; gap:10px; }
+    .avatar { width:34px; height:34px; border-radius:50%; background:linear-gradient(135deg, var(--accent), var(--red)); display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:700; color:white; flex-shrink:0; }
+    .user-info { flex:1; min-width:0; }
+    .user-name { font-size:13px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .user-role { font-size:11px; color:var(--muted); }
+    .logout-btn { cursor:pointer; color:var(--muted); font-size:18px; flex-shrink:0; transition:color 0.2s; background:none; border:none; padding:0; line-height:1; }
+    .logout-btn:hover { color:var(--red); }
+
+    .main { margin-left:220px; min-height:100vh; position:relative; z-index:1; }
+    .topbar { display:flex; align-items:center; justify-content:space-between; padding:20px 32px; border-bottom:1px solid var(--border); background:rgba(13,15,20,0.8); backdrop-filter:blur(8px); position:sticky; top:0; z-index:5; }
+    .page-title { font-family:'Barlow Condensed',sans-serif; font-size:26px; font-weight:700; letter-spacing:0.5px; }
+    .topbar-right { display:flex; align-items:center; gap:16px; }
+    .date-badge { font-size:12px; color:var(--muted); background:var(--surface2); padding:6px 14px; border-radius:20px; border:1px solid var(--border); }
+    .notif-btn { width:36px; height:36px; background:var(--surface2); border:1px solid var(--border); border-radius:8px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:16px; position:relative; transition:0.2s; }
+    .notif-btn:hover { background:var(--surface); }
+    .notif-dot { position:absolute; top:6px; right:6px; width:7px; height:7px; background:var(--red); border-radius:50%; border:2px solid var(--bg); }
+
+    .content { padding:32px; }
+
+    .stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:32px; }
+    .stat-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px; position:relative; overflow:hidden; transition:transform 0.2s, border-color 0.2s; animation:fadeUp 0.4s ease both; }
+    .stat-card:hover { transform:translateY(-2px); border-color:rgba(255,255,255,0.15); }
+    .stat-card::after { content:''; position:absolute; top:0; left:0; right:0; height:3px; border-radius:12px 12px 0 0; }
+    .stat-card.green::after{background:var(--green)} .stat-card.orange::after{background:var(--accent)} .stat-card.blue::after{background:var(--blue)} .stat-card.red::after{background:var(--red)}
+    .stat-card:nth-child(1){animation-delay:.05s} .stat-card:nth-child(2){animation-delay:.10s} .stat-card:nth-child(3){animation-delay:.15s} .stat-card:nth-child(4){animation-delay:.20s}
+    .stat-label { font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:.8px; margin-bottom:10px; }
+    .stat-value { font-family:'Barlow Condensed',sans-serif; font-size:34px; font-weight:700; line-height:1; margin-bottom:6px; }
+    .stat-card.green .stat-value{color:var(--green)} .stat-card.orange .stat-value{color:var(--accent)} .stat-card.blue .stat-value{color:var(--blue)} .stat-card.red .stat-value{color:var(--red)}
+    .stat-sub { font-size:12px; color:var(--muted); }
+    .stat-icon { position:absolute; right:16px; top:16px; font-size:26px; opacity:.15; }
+
+    .tab-row { display:flex; gap:4px; margin-bottom:24px; background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:4px; width:fit-content; animation:fadeUp 0.4s ease 0.2s both; }
+    .tab-btn { padding:8px 20px; border-radius:7px; border:none; background:transparent; color:var(--muted); font-family:'DM Sans',sans-serif; font-size:13px; font-weight:500; cursor:pointer; transition:all 0.2s; }
+    .tab-btn.active { background:var(--surface2); color:var(--text); }
+    .tab-btn.active.green { background:rgba(64,200,128,0.15); color:var(--green); }
+
+    .payment-layout { display:grid; grid-template-columns:1fr 380px; gap:20px; animation:fadeUp 0.4s ease 0.25s both; }
+
+    .panel { background:var(--surface); border:1px solid var(--border); border-radius:14px; overflow:hidden; }
+    .panel-header { padding:20px 24px 16px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--border); flex-wrap:wrap; gap:10px; }
+    .panel-title { font-family:'Barlow Condensed',sans-serif; font-size:18px; font-weight:700; }
+    .panel-actions { display:flex; gap:8px; flex-wrap:wrap; }
+    .search-box { display:flex; align-items:center; gap:8px; background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:8px 12px; font-size:13px; }
+    .search-box input { background:none; border:none; outline:none; color:var(--text); font-size:13px; font-family:'DM Sans',sans-serif; width:150px; }
+    .search-box input::placeholder { color:var(--muted); }
+    .btn { padding:8px 16px; border-radius:8px; font-size:13px; font-weight:500; cursor:pointer; border:none; transition:all 0.2s; font-family:'DM Sans',sans-serif; }
+    .btn-primary { background:var(--green); color:#0d0f14; }
+    .btn-primary:hover { background:#50d890; transform:translateY(-1px); }
+    .btn-outline { background:transparent; color:var(--text); border:1px solid var(--border); }
+    .btn-outline:hover { background:var(--surface2); }
+    .btn-danger { background:transparent; color:var(--red); border:1px solid rgba(232,64,64,0.3); }
+    .btn-danger:hover { background:rgba(232,64,64,0.1); }
+    .btn-sm { padding:5px 12px; font-size:12px; }
+
+    .table-wrap { overflow-x:auto; }
+    table { width:100%; border-collapse:collapse; }
+    thead th { padding:10px 16px; text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.8px; color:var(--muted); font-weight:500; border-bottom:1px solid var(--border); background:rgba(255,255,255,0.02); white-space:nowrap; }
+    tbody tr { transition:background 0.15s; cursor:pointer; }
+    tbody tr:hover { background:rgba(255,255,255,0.03); }
+    tbody tr.selected { background:rgba(64,200,128,0.06); border-left:2px solid var(--green); }
+    tbody td { padding:13px 16px; font-size:13px; border-bottom:1px solid var(--border); white-space:nowrap; }
+    tbody tr:last-child td { border-bottom:none; }
+
+    .badge { display:inline-flex; align-items:center; gap:5px; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:600; letter-spacing:.3px; }
+    .badge-paid    { background:rgba(64,200,128,0.15); color:var(--green); }
+    .badge-pending { background:rgba(232,160,32,0.15); color:var(--accent); }
+    .badge-partial { background:rgba(64,128,232,0.15); color:var(--blue); }
+    .badge-overdue { background:rgba(232,64,64,0.15);  color:var(--red); }
+    .badge-dot { width:5px; height:5px; border-radius:50%; background:currentColor; }
+
+    .method-icon { display:inline-flex; align-items:center; gap:6px; font-size:12px; }
+
+    .form-panel { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:24px; display:flex; flex-direction:column; height:fit-content; position:sticky; top:88px; max-height:calc(100vh - 120px); overflow-y:auto; }
+    .form-title { font-family:'Barlow Condensed',sans-serif; font-size:18px; font-weight:700; margin-bottom:6px; }
+    .form-sub { font-size:12px; color:var(--muted); margin-bottom:20px; line-height:1.5; }
+    .form-group { margin-bottom:14px; }
+    .form-label { font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:.6px; margin-bottom:6px; display:block; }
+    .form-control { width:100%; background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:10px 14px; font-size:13px; color:var(--text); font-family:'DM Sans',sans-serif; outline:none; transition:border-color 0.2s; }
+    .form-control:focus { border-color:rgba(64,200,128,0.4); box-shadow:0 0 0 3px rgba(64,200,128,0.06); }
+    .form-control:read-only { opacity:0.7; cursor:default; }
+    .form-control option { background:var(--surface2); }
+    .form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+
+    .amount-display { background:rgba(64,200,128,0.06); border:1px solid rgba(64,200,128,0.15); border-radius:10px; padding:16px; margin-bottom:16px; }
+    .amount-row { display:flex; justify-content:space-between; font-size:13px; margin-bottom:8px; }
+    .amount-row:last-child { margin-bottom:0; padding-top:8px; border-top:1px solid rgba(64,200,128,0.15); font-weight:600; }
+    .amount-label { color:var(--muted); }
+    .amount-value { color:var(--text); }
+    .amount-total { color:var(--green); font-family:'Barlow Condensed',sans-serif; font-size:20px; }
+
+    .form-divider { height:1px; background:var(--border); margin:16px 0; }
+
+    .btn-full { width:100%; padding:12px; font-size:14px; border-radius:10px; font-weight:600; }
+    .btn-green { background:var(--green); color:#0d0f14; }
+    .btn-green:hover { background:#50d890; transform:translateY(-1px); }
+    .btn-ghost { background:transparent; color:var(--muted); border:1px solid var(--border); }
+    .btn-ghost:hover { color:var(--text); background:var(--surface2); }
+
+    /* Status update inline */
+    .status-update-row { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px; }
+    .status-chip { padding:4px 12px; border-radius:20px; font-size:11px; font-weight:600; cursor:pointer; border:1px solid transparent; transition:all 0.2s; }
+    .status-chip:hover { transform:scale(1.05); }
+    .chip-paid    { background:rgba(64,200,128,0.12); color:var(--green); border-color:rgba(64,200,128,0.2); }
+    .chip-pending { background:rgba(232,160,32,0.12); color:var(--accent); border-color:rgba(232,160,32,0.2); }
+    .chip-partial { background:rgba(64,128,232,0.12); color:var(--blue); border-color:rgba(64,128,232,0.2); }
+    .chip-overdue { background:rgba(232,64,64,0.12); color:var(--red); border-color:rgba(232,64,64,0.2); }
+
+    /* Receipt Modal */
+    .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.75); backdrop-filter:blur(6px); z-index:50; display:flex; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition:opacity 0.25s; }
+    .modal-overlay.open { opacity:1; pointer-events:all; }
+    .modal { background:var(--surface); border:1px solid var(--border); border-radius:18px; padding:32px; width:440px; max-width:90vw; max-height:90vh; overflow-y:auto; position:relative; transform:translateY(20px) scale(0.97); transition:transform 0.25s; box-shadow:0 40px 80px rgba(0,0,0,0.6); }
+    .modal-overlay.open .modal { transform:translateY(0) scale(1); }
+    .modal-close { position:absolute; top:16px; right:16px; background:var(--surface2); border:none; color:var(--muted); cursor:pointer; width:28px; height:28px; border-radius:6px; font-size:14px; display:flex; align-items:center; justify-content:center; transition:0.2s; }
+    .modal-close:hover { color:var(--text); background:var(--border); }
+
+    /* Confirm Delete Modal */
+    .confirm-modal { background:var(--surface); border:1px solid rgba(232,64,64,0.2); border-radius:18px; padding:32px; width:400px; max-width:90vw; position:relative; transform:translateY(20px) scale(0.97); transition:transform 0.25s; box-shadow:0 40px 80px rgba(0,0,0,0.6); text-align:center; }
+    .modal-overlay.open .confirm-modal { transform:translateY(0) scale(1); }
+
+    .receipt-header { text-align:center; padding-bottom:20px; border-bottom:1px dashed rgba(255,255,255,0.1); margin-bottom:20px; }
+    .receipt-logo { font-size:32px; margin-bottom:8px; }
+    .receipt-title { font-family:'Barlow Condensed',sans-serif; font-size:22px; font-weight:800; }
+    .receipt-sub { font-size:11px; color:var(--muted); margin-top:2px; }
+    .receipt-id { display:inline-block; margin-top:8px; background:rgba(64,200,128,0.12); color:var(--green); padding:3px 14px; border-radius:20px; font-size:12px; font-weight:600; }
+    .receipt-row { display:flex; justify-content:space-between; font-size:13px; padding:7px 0; border-bottom:1px solid rgba(255,255,255,0.04); }
+    .receipt-row .rl { color:var(--muted); }
+    .receipt-row .rv { font-weight:500; max-width:240px; text-align:right; }
+    .receipt-total { display:flex; justify-content:space-between; padding:14px; background:rgba(64,200,128,0.06); border:1px solid rgba(64,200,128,0.2); border-radius:10px; margin-top:16px; align-items:center; }
+    .receipt-total .rl { font-weight:600; font-size:14px; }
+    .receipt-total .rv { font-family:'Barlow Condensed',sans-serif; font-size:24px; color:var(--green); }
+    .receipt-actions { display:flex; gap:10px; margin-top:20px; }
+
+    .history-empty { padding:60px; text-align:center; color:var(--muted); }
+    .history-empty-icon { font-size:44px; margin-bottom:12px; opacity:.3; }
+
+    #toast { position:fixed; bottom:24px; right:24px; background:var(--surface); border:1px solid rgba(64,200,128,0.3); padding:14px 20px; border-radius:10px; font-size:13px; font-weight:500; opacity:0; transform:translateY(10px); transition:all 0.3s; z-index:99; display:flex; align-items:center; gap:10px; pointer-events:none; box-shadow:0 8px 32px rgba(0,0,0,0.4); max-width:340px; }
+
+    .empty-state { padding:48px; text-align:center; color:var(--muted); }
+    .empty-icon { font-size:40px; margin-bottom:12px; opacity:.4; }
+    .empty-text { font-size:14px; }
+
+    /* Pagination */
+    .pagination { display:flex; align-items:center; justify-content:space-between; padding:12px 20px; border-top:1px solid var(--border); font-size:12px; color:var(--muted); }
+    .page-btns { display:flex; gap:4px; }
+    .page-btn { padding:4px 10px; border-radius:6px; border:1px solid var(--border); background:transparent; color:var(--muted); cursor:pointer; font-size:12px; transition:0.2s; }
+    .page-btn:hover, .page-btn.active { background:var(--surface2); color:var(--text); }
+
+    @keyframes fadeUp  { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+    ::-webkit-scrollbar { width:5px; height:5px; }
+    ::-webkit-scrollbar-track { background:transparent; }
+    ::-webkit-scrollbar-thumb { background:var(--border); border-radius:10px; }
+
+    @media print {
+      .sidebar, .topbar, .tab-row, .stats-grid, .panel-actions, .receipt-actions, .modal-close, .btn-ghost, #toast { display:none !important; }
+      .modal-overlay { position:static; background:none; backdrop-filter:none; opacity:1; pointer-events:all; }
+      .modal { box-shadow:none; border:none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="logo-area">
+    <div class="logo-icon">🔧</div>
+    <div class="logo-text">AutoCare<span>Workshop Management</span></div>
+  </div>
+  <nav class="nav-section">
+    <div class="nav-label">Main</div>
+    <a class="nav-item" href="homepage.html"><div class="nav-dot" style="background:#e8a020"></div>Dashboard</a>
+    <div class="nav-label">Modules</div>
+    <a class="nav-item" href="booking.html"><div class="nav-dot" style="background:#e8a020"></div>Manage Booking</a>
+    <a class="nav-item" href="services.html"><div class="nav-dot" style="background:#f0c060"></div>Manage Services</a>
+    <a class="nav-item" href="workorder.html"><div class="nav-dot" style="background:#4080e8"></div>Manage Work Order</a>
+    <a class="nav-item active" href="payment.html"><div class="nav-dot" style="background:#40c880"></div>Manage Payment</a>
+    <a class="nav-item" href="inventory.html"><div class="nav-dot" style="background:#a060e8"></div>Manage Inventory</a>
+    <div class="nav-label">System</div>
+    <a class="nav-item" href="reports.html"><div class="nav-dot" style="background:#7a8099"></div>Reports</a>
+    <a class="nav-item" href="settings.html"><div class="nav-dot" style="background:#7a8099"></div>Settings</a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="avatar" id="sidebarAvatar">A</div>
+      <div class="user-info">
+        <div class="user-name" id="sidebarName">Admin</div>
+        <div class="user-role" id="sidebarRole">Administrator</div>
+      </div>
+      <button class="logout-btn" onclick="logout()" title="Log Keluar">⏻</button>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <div class="topbar">
+    <div class="page-title">Manage Payment <span style="color:var(--muted);font-size:18px;font-weight:400">/ Payment Module</span></div>
+    <div class="topbar-right">
+      <div class="date-badge" id="dateDisplay"></div>
+      <div class="notif-btn">🔔<div class="notif-dot"></div></div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- STATS -->
+    <div class="stats-grid">
+      <div class="stat-card green">
+        <div class="stat-icon">💰</div>
+        <div class="stat-label">Total Revenue</div>
+        <div class="stat-value" id="statRevenue">RM 0</div>
+        <div class="stat-sub" id="statRevSub">0 paid invoices</div>
+      </div>
+      <div class="stat-card orange">
+        <div class="stat-icon">⏳</div>
+        <div class="stat-label">Pending Payments</div>
+        <div class="stat-value" id="statPending">0</div>
+        <div class="stat-sub" id="statPendSub">awaiting payment</div>
+      </div>
+      <div class="stat-card blue">
+        <div class="stat-icon">📋</div>
+        <div class="stat-label">Total Invoices</div>
+        <div class="stat-value" id="statTotal">0</div>
+        <div class="stat-sub">all records</div>
+      </div>
+      <div class="stat-card red">
+        <div class="stat-icon">🚨</div>
+        <div class="stat-label">Overdue</div>
+        <div class="stat-value" id="statOverdue">0</div>
+        <div class="stat-sub" id="statOverdueSub">needs attention</div>
+      </div>
+    </div>
+
+    <!-- TABS -->
+    <div class="tab-row">
+      <button class="tab-btn active green" id="tabBtn-invoices" onclick="switchTab('invoices',this)">💳 Invoices</button>
+      <button class="tab-btn" id="tabBtn-record" onclick="switchTab('record',this)">➕ Record Payment</button>
+      <button class="tab-btn" id="tabBtn-history" onclick="switchTab('history',this)">📜 History</button>
+    </div>
+
+    <!-- TAB: INVOICES -->
+    <div id="tab-invoices">
+      <div class="payment-layout">
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">Invoice List <span id="invoiceCount" style="color:var(--muted);font-size:14px;font-weight:400"></span></div>
+            <div class="panel-actions">
+              <div class="search-box">
+                <span>🔍</span>
+                <input type="text" id="searchInput" placeholder="Search invoice, customer..." oninput="filterTable()">
+              </div>
+              <select class="form-control" id="filterStatus" style="width:140px;padding:8px 12px;font-size:13px" onchange="filterTable()">
+                <option value="">All Status</option>
+                <option value="Paid">Paid</option>
+                <option value="Pending">Pending</option>
+                <option value="Partial">Partial</option>
+                <option value="Overdue">Overdue</option>
+              </select>
+              <button class="btn btn-outline btn-sm" onclick="exportInvoices()">⬇️ Export</button>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Invoice No.</th>
+                  <th>Customer</th>
+                  <th>Vehicle</th>
+                  <th>Services</th>
+                  <th>Amount (RM)</th>
+                  <th>Status</th>
+                  <th>Date</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="invoiceTableBody"></tbody>
+            </table>
+          </div>
+          <div class="pagination" id="invPagination"></div>
+        </div>
+
+        <!-- DETAIL / PAY PANEL -->
+        <div class="form-panel" id="detailPanel">
+          <div class="form-title">💳 Payment Details</div>
+
+          <div id="detailPlaceholder" style="text-align:center;padding:32px 0;color:var(--muted)">
+            <div style="font-size:44px;margin-bottom:14px;opacity:.25">💳</div>
+            <div style="font-size:13px;line-height:1.7">Click any invoice row<br>to view or process payment.</div>
+          </div>
+
+          <div id="detailContent" style="display:none">
+            <div class="form-sub" id="detailSubMsg">Review details and process payment below.</div>
+
+            <div class="form-group">
+              <label class="form-label">Invoice No.</label>
+              <input class="form-control" id="d_inv" readonly>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Customer Name</label>
+              <input class="form-control" id="d_cust" readonly>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Vehicle</label>
+              <input class="form-control" id="d_vehicle" readonly>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Services</label>
+              <input class="form-control" id="d_services" readonly>
+            </div>
+
+            <div class="amount-display">
+              <div class="amount-row"><span class="amount-label">Subtotal</span><span class="amount-value" id="d_subtotal">RM 0.00</span></div>
+              <div class="amount-row"><span class="amount-label">Discount</span><span class="amount-value" id="d_discount" style="color:var(--red)">- RM 0.00</span></div>
+              <div class="amount-row"><span class="amount-label">Total Due</span><span class="amount-total" id="d_total">RM 0.00</span></div>
+            </div>
+
+            <!-- Status update chips -->
+            <div class="form-group" id="statusUpdateGroup">
+              <label class="form-label">Update Status</label>
+              <div class="status-update-row">
+                <span class="status-chip chip-paid"    onclick="updateInvoiceStatus('Paid')">✅ Paid</span>
+                <span class="status-chip chip-pending" onclick="updateInvoiceStatus('Pending')">⏳ Pending</span>
+                <span class="status-chip chip-partial" onclick="updateInvoiceStatus('Partial')">💙 Partial</span>
+                <span class="status-chip chip-overdue" onclick="updateInvoiceStatus('Overdue')">🚨 Overdue</span>
+              </div>
+            </div>
+
+            <div class="form-group" id="payMethodGroup">
+              <label class="form-label">Payment Method</label>
+              <select class="form-control" id="d_method">
+                <option value="Cash">💵 Cash</option>
+                <option value="Card">💳 Credit / Debit Card</option>
+                <option value="Online">📱 Online Transfer (DuitNow)</option>
+                <option value="Cheque">📝 Cheque</option>
+              </select>
+            </div>
+
+            <div id="d_paidBadgeWrap" style="display:none;margin-bottom:14px">
+              <div style="background:rgba(64,200,128,0.08);border:1px solid rgba(64,200,128,0.2);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--green);">
+                ✅ Paid via <b id="d_paidMethod">Cash</b>
+              </div>
+            </div>
+
+            <div class="form-divider"></div>
+
+            <button class="btn btn-green btn-full" id="d_payBtn" onclick="processPayment()">Record Payment</button>
+            <button class="btn btn-outline btn-full" style="margin-top:8px" id="d_receiptBtn" onclick="showReceiptForSelected()" style="display:none">🖨️ Print Receipt</button>
+            <button class="btn btn-danger btn-full" style="margin-top:8px" onclick="confirmDeleteInvoice()">🗑️ Delete Invoice</button>
+            <button class="btn btn-ghost btn-full" style="margin-top:8px" onclick="clearDetail()">✕ Clear</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: RECORD PAYMENT -->
+    <div id="tab-record" style="display:none">
+      <div class="payment-layout">
+        <div class="form-panel" style="max-width:100%;position:static">
+          <div class="form-title">➕ Record New Payment</div>
+          <div class="form-sub">Catat pembayaran baru. Masukkan Invoice No. untuk auto-fill maklumat pelanggan.</div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Invoice No. *</label>
+              <input class="form-control" id="r_inv" placeholder="e.g. INV-0015" oninput="autoFillFromInvoice(this.value)">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Work Order No.</label>
+              <input class="form-control" id="r_wo" placeholder="e.g. WO-0041">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Customer Name *</label>
+            <input class="form-control" id="r_cust" placeholder="Nama penuh pelanggan">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Vehicle (Plate No.)</label>
+            <input class="form-control" id="r_vehicle" placeholder="e.g. WXY 1234 — Proton Saga">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Services Rendered</label>
+            <input class="form-control" id="r_services" placeholder="e.g. Full Service, Tyre Replacement">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Amount (RM) *</label>
+              <input class="form-control" id="r_amount" type="number" step="0.01" placeholder="0.00" oninput="updateRecordSummary()">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Discount (RM)</label>
+              <input class="form-control" id="r_discount" type="number" step="0.01" placeholder="0.00" value="0" oninput="updateRecordSummary()">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Payment Method *</label>
+              <select class="form-control" id="r_method">
+                <option value="Cash">💵 Cash</option>
+                <option value="Card">💳 Card</option>
+                <option value="Online">📱 Online Transfer</option>
+                <option value="Cheque">📝 Cheque</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Payment Date</label>
+              <input class="form-control" id="r_date" type="date">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Status</label>
+            <select class="form-control" id="r_status">
+              <option value="Paid">✅ Paid</option>
+              <option value="Pending">⏳ Pending</option>
+              <option value="Partial">💙 Partial</option>
+              <option value="Overdue">🚨 Overdue</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Notes (optional)</label>
+            <textarea class="form-control" id="r_notes" rows="2" placeholder="e.g. Ref: DuitNow #12345, customer requested e-receipt..." style="resize:none"></textarea>
+          </div>
+
+          <div class="amount-display">
+            <div class="amount-row"><span class="amount-label">Amount</span><span class="amount-value" id="r_s_amount">RM 0.00</span></div>
+            <div class="amount-row"><span class="amount-label">Discount</span><span class="amount-value" style="color:var(--red)" id="r_s_disc">- RM 0.00</span></div>
+            <div class="amount-row"><span class="amount-label">Total</span><span class="amount-total" id="r_s_total">RM 0.00</span></div>
+          </div>
+
+          <div style="display:flex;gap:10px">
+            <button class="btn btn-green btn-full" onclick="submitRecord()">💾 Save Payment</button>
+            <button class="btn btn-ghost btn-full" onclick="clearRecord()">Clear</button>
+          </div>
+        </div>
+
+        <div class="panel" style="height:fit-content">
+          <div class="panel-header"><div class="panel-title">📌 Tips</div></div>
+          <div style="padding:20px;font-size:13px;color:var(--muted);line-height:2">
+            <div>💡 Masukkan <b style="color:var(--text)">Invoice No.</b> yang sedia ada untuk auto-fill.</div>
+            <div>🔗 Link <b style="color:var(--text)">Work Order No.</b> supaya payment sync.</div>
+            <div>📱 Untuk DuitNow/Online — letakkan no. rujukan dalam Notes.</div>
+            <div>📄 Receipt akan dijana automatik selepas simpan.</div>
+            <div>✏️ Boleh set status kepada <b style="color:var(--text)">Pending</b> jika belum bayar lagi.</div>
+          </div>
+          <div style="padding:0 20px 20px">
+            <div style="background:var(--surface2);border-radius:10px;padding:14px;font-size:12px;color:var(--muted)">
+              <div style="font-weight:600;color:var(--text);margin-bottom:6px">📊 Quick Stats</div>
+              <div>Invoices: <b style="color:var(--text)" id="tipTotal">0</b></div>
+              <div>Paid: <b style="color:var(--green)" id="tipPaid">0</b></div>
+              <div>Pending: <b style="color:var(--accent)" id="tipPending">0</b></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: HISTORY -->
+    <div id="tab-history" style="display:none">
+      <div class="panel" style="border-radius:14px;overflow:hidden">
+        <div class="panel-header">
+          <div class="panel-title">📜 Payment History</div>
+          <div class="panel-actions">
+            <div class="search-box">
+              <span>🔍</span>
+              <input type="text" id="histSearch" placeholder="Search receipt, customer..." oninput="filterHistory()">
+            </div>
+            <select class="form-control" id="histMethodFilter" style="width:140px;padding:8px 12px;font-size:13px" onchange="filterHistory()">
+              <option value="">All Methods</option>
+              <option value="Cash">Cash</option>
+              <option value="Card">Card</option>
+              <option value="Online">Online</option>
+              <option value="Cheque">Cheque</option>
+            </select>
+            <button class="btn btn-outline btn-sm" onclick="exportHistory()">⬇️ Export CSV</button>
+            <button class="btn btn-danger btn-sm" onclick="confirmClearHistory()">🗑️ Clear All</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Receipt No.</th>
+                <th>Invoice No.</th>
+                <th>Customer</th>
+                <th>Vehicle</th>
+                <th>Method</th>
+                <th>Amount (RM)</th>
+                <th>Date</th>
+                <th>Recorded By</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="historyTableBody"></tbody>
+          </table>
+        </div>
+        <div class="pagination" id="histPagination"></div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<!-- RECEIPT MODAL -->
+<div class="modal-overlay" id="receiptModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('receiptModal')">✕</button>
+    <div class="receipt-header">
+      <div class="receipt-logo">🔧</div>
+      <div class="receipt-title">AutoCare Workshop</div>
+      <div class="receipt-sub">No. 12, Jalan Bengkel, 47500 Subang Jaya, Selangor</div>
+      <div class="receipt-sub">Tel: 03-5555 1234 | autocare@workshop.my</div>
+      <div class="receipt-id" id="receiptId">RCP-0001</div>
+    </div>
+    <div id="receiptBody"></div>
+    <div class="receipt-total">
+      <span class="rl">TOTAL PAID</span>
+      <span class="rv" id="receiptTotal">RM 0.00</span>
+    </div>
+    <div style="text-align:center;font-size:11px;color:var(--muted);margin-top:14px;line-height:1.8">
+      Terima kasih kerana memilih AutoCare! 🙏<br>
+      <span style="font-size:10px">Simpan resit ini sebagai bukti pembayaran.</span>
+    </div>
+    <div class="receipt-actions">
+      <button class="btn btn-green btn-full" onclick="printReceipt()">🖨️ Print Receipt</button>
+      <button class="btn btn-outline btn-full" onclick="closeModal('receiptModal')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM MODAL -->
+<div class="modal-overlay" id="confirmModal">
+  <div class="confirm-modal">
+    <button class="modal-close" onclick="closeModal('confirmModal')">✕</button>
+    <div style="font-size:40px;margin-bottom:16px" id="confirmIcon">⚠️</div>
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;margin-bottom:8px" id="confirmTitle">Confirm Action</div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:24px;line-height:1.6" id="confirmMsg">Are you sure?</div>
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-danger btn-full" id="confirmOkBtn" onclick="executeConfirm()">Confirm</button>
+      <button class="btn btn-ghost btn-full" onclick="closeModal('confirmModal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"><span id="toastIcon">✅</span><span id="toastMsg">Done</span></div>
+
+<script>
+// ============================================================
+// STATE & STORAGE
+// ============================================================
+var STORAGE_KEY_INV  = 'autocare_invoices_v2';
+var STORAGE_KEY_HIST = 'autocare_history_v2';
+var RECEIPT_COUNTER  = 'autocare_receipt_counter';
+
+var user = { name:'Admin', role:'admin', id:'ADMIN' };
+try { var _u = sessionStorage.getItem('wms_user'); if(_u) user = JSON.parse(_u); } catch(e){}
+
+// Seed data — only if localStorage empty
+var SEED_INVOICES = [
+  { id:'INV-0041', customer:'Ahmad bin Ali',       vehicle:'WXY 1234 — Proton Saga',     services:'Full Service, Engine Oil Change', amount:420,  discount:0,   status:'Paid',    date:'22/04/2025', method:'Cash',   wo:'WO-0041' },
+  { id:'INV-0042', customer:'Siti Nurhaliza',      vehicle:'VJK 8821 — Toyota Vios',     services:'Brake Pad Replacement',           amount:280,  discount:20,  status:'Pending', date:'22/04/2025', method:'',       wo:'WO-0042' },
+  { id:'INV-0043', customer:'Raj Kumar',           vehicle:'BJA 4499 — Honda Civic',     services:'Tyre Rotation, Alignment',        amount:150,  discount:0,   status:'Partial', date:'21/04/2025', method:'Card',   wo:'WO-0043' },
+  { id:'INV-0044', customer:'Nurul Ain binti Zul', vehicle:'PJY 2210 — Perodua Myvi',    services:'Air Filter, Cabin Filter',        amount:95,   discount:5,   status:'Paid',    date:'21/04/2025', method:'Online', wo:'WO-0044' },
+  { id:'INV-0045', customer:'Lim Ah Kow',          vehicle:'WGT 7736 — Proton X50',      services:'Suspension Check, Battery',       amount:550,  discount:50,  status:'Overdue', date:'18/04/2025', method:'',       wo:'WO-0045' },
+  { id:'INV-0046', customer:'Fatimah bt Rashid',   vehicle:'DKM 9923 — Nissan Almera',   services:'Full Service',                    amount:380,  discount:0,   status:'Pending', date:'20/04/2025', method:'',       wo:'WO-0046' },
+  { id:'INV-0047', customer:'Tan Wei Liang',        vehicle:'PBE 3301 — BMW 320i',        services:'Spark Plugs, Timing Belt',        amount:1200, discount:100, status:'Paid',    date:'19/04/2025', method:'Card',   wo:'WO-0047' },
+];
+
+function loadInvoices() {
+  try {
+    var raw = localStorage.getItem(STORAGE_KEY_INV);
+    if (raw) return JSON.parse(raw);
+  } catch(e){}
+  saveInvoices(SEED_INVOICES);
+  return SEED_INVOICES.slice();
+}
+function saveInvoices(data) {
+  try { localStorage.setItem(STORAGE_KEY_INV, JSON.stringify(data)); } catch(e){}
+}
+function loadHistory() {
+  try {
+    var raw = localStorage.getItem(STORAGE_KEY_HIST);
+    if (raw) return JSON.parse(raw);
+  } catch(e){}
+  // Seed history from paid invoices
+  var hist = SEED_INVOICES.filter(function(i){ return i.status==='Paid'; }).map(function(i,idx){
+    return Object.assign({}, i, { receipt:'RCP-004'+(1+idx), recordedBy: 'Admin', recordedAt: i.date });
+  });
+  saveHistory(hist);
+  return hist;
+}
+function saveHistory(data) {
+  try { localStorage.setItem(STORAGE_KEY_HIST, JSON.stringify(data)); } catch(e){}
+}
+function nextReceiptId() {
+  var n = parseInt(localStorage.getItem(RECEIPT_COUNTER)||'50',10) + 1;
+  localStorage.setItem(RECEIPT_COUNTER, n);
+  return 'RCP-' + String(n).padStart(4,'0');
+}
+
+var invoices = loadInvoices();
+var history  = loadHistory();
+var selectedInvoice = null;
+var confirmCallback = null;
+var invPage = 1, histPage = 1;
+var PAGE_SIZE = 10;
+
+// ============================================================
+// INIT UI
+// ============================================================
+document.getElementById('sidebarName').textContent   = user.name;
+document.getElementById('sidebarRole').textContent   = ({admin:'Administrator',mechanic:'Mechanic',customer:'Customer',guest:'Guest'})[user.role]||user.role;
+document.getElementById('sidebarAvatar').textContent = (user.name||'A').charAt(0).toUpperCase();
+document.getElementById('dateDisplay').textContent   = new Date().toLocaleDateString('en-MY',{weekday:'short',day:'numeric',month:'long',year:'numeric'});
+document.getElementById('r_date').valueAsDate = new Date();
+
+updateStats();
+filterTable();
+updateQuickStats();
+
+// ============================================================
+// STATS
+// ============================================================
+function updateStats() {
+  var paid    = invoices.filter(function(i){ return i.status==='Paid'; });
+  var pending = invoices.filter(function(i){ return i.status==='Pending'||i.status==='Partial'; });
+  var overdue = invoices.filter(function(i){ return i.status==='Overdue'; });
+  var revenue = paid.reduce(function(s,i){ return s+(i.amount-i.discount); }, 0);
+
+  document.getElementById('statRevenue').textContent  = 'RM '+revenue.toLocaleString('en-MY',{minimumFractionDigits:2});
+  document.getElementById('statRevSub').textContent   = paid.length+' paid invoice'+(paid.length!==1?'s':'');
+  document.getElementById('statPending').textContent  = pending.length;
+  document.getElementById('statPendSub').textContent  = pending.length+' invoice'+(pending.length!==1?'s':'');
+  document.getElementById('statTotal').textContent    = invoices.length;
+  document.getElementById('statOverdue').textContent  = overdue.length;
+  document.getElementById('statOverdueSub').textContent = overdue.length ? overdue.length+' overdue!' : 'none';
+}
+function updateQuickStats() {
+  document.getElementById('tipTotal').textContent   = invoices.length;
+  document.getElementById('tipPaid').textContent    = invoices.filter(function(i){ return i.status==='Paid'; }).length;
+  document.getElementById('tipPending').textContent = invoices.filter(function(i){ return i.status==='Pending'||i.status==='Partial'||i.status==='Overdue'; }).length;
+}
+
+// ============================================================
+// INVOICE TABLE
+// ============================================================
+function statusBadge(s) {
+  var cls = { Paid:'badge-paid', Pending:'badge-pending', Partial:'badge-partial', Overdue:'badge-overdue' };
+  return '<span class="badge '+(cls[s]||'')+'"><span class="badge-dot"></span>'+s+'</span>';
+}
+function methodIcon(m) {
+  var icons = { Cash:'💵 Cash', Card:'💳 Card', Online:'📱 Online', Cheque:'📝 Cheque' };
+  return '<span class="method-icon">'+(icons[m]||'—')+'</span>';
+}
+
+var filteredInvoices = [];
+
+function filterTable() {
+  var q = (document.getElementById('searchInput').value||'').toLowerCase();
+  var s = document.getElementById('filterStatus').value;
+  filteredInvoices = invoices.filter(function(i){
+    var match = !q || i.id.toLowerCase().includes(q) || i.customer.toLowerCase().includes(q) || i.vehicle.toLowerCase().includes(q) || (i.wo&&i.wo.toLowerCase().includes(q));
+    var stat  = !s || i.status===s;
+    return match && stat;
+  });
+  invPage = 1;
+  renderTable();
+}
+
+function renderTable() {
+  var tbody = document.getElementById('invoiceTableBody');
+  document.getElementById('invoiceCount').textContent = '('+filteredInvoices.length+' record'+(filteredInvoices.length!==1?'s':'')+')';
+
+  var start = (invPage-1)*PAGE_SIZE;
+  var page  = filteredInvoices.slice(start, start+PAGE_SIZE);
+
+  if (!filteredInvoices.length) {
+    tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-text">Tiada invoice dijumpai.</div></div></td></tr>';
+    document.getElementById('invPagination').innerHTML = '';
+    return;
+  }
+  tbody.innerHTML = page.map(function(inv) {
+    var net = (inv.amount - inv.discount).toFixed(2);
+    var isSel = selectedInvoice && selectedInvoice.id === inv.id;
+    return '<tr onclick="selectInvoice(\''+escId(inv.id)+'\')" '+(isSel?'class="selected"':'')+'>' +
+      '<td><b style="color:var(--accent)">'+inv.id+'</b></td>' +
+      '<td>'+inv.customer+'</td>' +
+      '<td style="color:var(--muted);font-size:12px">'+inv.vehicle.split('—')[0].trim()+'</td>' +
+      '<td style="color:var(--muted);font-size:12px;max-width:140px;overflow:hidden;text-overflow:ellipsis">'+inv.services+'</td>' +
+      '<td><b>'+parseFloat(net).toLocaleString('en-MY',{minimumFractionDigits:2})+'</b></td>' +
+      '<td>'+statusBadge(inv.status)+'</td>' +
+      '<td style="color:var(--muted);font-size:12px">'+inv.date+'</td>' +
+      '<td>' +
+        '<button class="btn btn-outline btn-sm" onclick="event.stopPropagation();selectInvoice(\''+escId(inv.id)+'\')" style="margin-right:4px">View</button>' +
+        (inv.status==='Paid'?'<button class="btn btn-sm" style="background:rgba(64,200,128,0.12);color:var(--green);border:1px solid rgba(64,200,128,0.2)" onclick="event.stopPropagation();showReceiptById(\''+escId(inv.id)+'\')">🧾</button>':'') +
+      '</td>' +
+    '</tr>';
+  }).join('');
+
+  renderPagination('invPagination', invPage, Math.ceil(filteredInvoices.length/PAGE_SIZE), function(p){ invPage=p; renderTable(); });
+}
+
+function escId(id) { return id.replace(/'/g,"\\'"); }
+
+function renderPagination(containerId, current, total, cb) {
+  var c = document.getElementById(containerId);
+  if (total <= 1) { c.innerHTML=''; return; }
+  var start = (current-1)*PAGE_SIZE + 1;
+  var end   = Math.min(current*PAGE_SIZE, filteredInvoices.length||history.length);
+  var html  = '<span>Showing '+start+'–'+end+' of '+(filteredInvoices.length||history.length)+'</span><div class="page-btns">';
+  if (current > 1) html += '<button class="page-btn" onclick="('+cb+')('+( current-1)+')">‹</button>';
+  for (var p=1;p<=total;p++) html += '<button class="page-btn'+(p===current?' active':'')+'" onclick="('+cb+')('+p+')">'+p+'</button>';
+  if (current < total) html += '<button class="page-btn" onclick="('+cb+')('+(current+1)+')">›</button>';
+  html += '</div>';
+  c.innerHTML = html;
+}
+
+// ============================================================
+// SELECT / DETAIL PANEL
+// ============================================================
+function selectInvoice(id) {
+  selectedInvoice = invoices.find(function(i){ return i.id===id; });
+  if (!selectedInvoice) return;
+  renderTable();
+
+  document.getElementById('detailContent').style.display     = 'block';
+  document.getElementById('detailPlaceholder').style.display = 'none';
+
+  document.getElementById('d_inv').value      = selectedInvoice.id;
+  document.getElementById('d_cust').value     = selectedInvoice.customer;
+  document.getElementById('d_vehicle').value  = selectedInvoice.vehicle;
+  document.getElementById('d_services').value = selectedInvoice.services;
+  document.getElementById('d_subtotal').textContent = 'RM '+parseFloat(selectedInvoice.amount).toFixed(2);
+  document.getElementById('d_discount').textContent  = '- RM '+parseFloat(selectedInvoice.discount).toFixed(2);
+  document.getElementById('d_total').textContent     = 'RM '+(selectedInvoice.amount-selectedInvoice.discount).toFixed(2);
+
+  var isPaid = selectedInvoice.status==='Paid';
+  document.getElementById('payMethodGroup').style.display  = isPaid?'none':'block';
+  document.getElementById('d_paidBadgeWrap').style.display = isPaid?'block':'none';
+  if (isPaid && selectedInvoice.method) {
+    document.getElementById('d_paidMethod').textContent = selectedInvoice.method;
+  }
+
+  var payBtn = document.getElementById('d_payBtn');
+  if (isPaid) {
+    payBtn.textContent = '🖨️ View Receipt';
+    payBtn.className = 'btn btn-outline btn-full';
+  } else {
+    payBtn.textContent = '✅ Record Payment';
+    payBtn.className = 'btn btn-green btn-full';
+  }
+
+  document.getElementById('detailSubMsg').textContent = 'Invoice: '+selectedInvoice.id+' | Status: '+selectedInvoice.status;
+
+  // Scroll detail panel into view
+  document.getElementById('detailPanel').scrollTop = 0;
+}
+
+function clearDetail() {
+  selectedInvoice = null;
+  document.getElementById('detailContent').style.display     = 'none';
+  document.getElementById('detailPlaceholder').style.display = 'block';
+  renderTable();
+}
+
+// ============================================================
+// STATUS UPDATE (from chips)
+// ============================================================
+function updateInvoiceStatus(newStatus) {
+  if (!selectedInvoice) return;
+  var oldStatus = selectedInvoice.status;
+  if (oldStatus === newStatus) { showToast('⚠️ Status sudah '+newStatus, false); return; }
+
+  selectedInvoice.status = newStatus;
+  if (newStatus !== 'Paid') selectedInvoice.method = '';
+
+  // Update in array
+  var idx = invoices.findIndex(function(i){ return i.id===selectedInvoice.id; });
+  if (idx !== -1) invoices[idx] = selectedInvoice;
+  saveInvoices(invoices);
+  updateStats();
+  filterTable();
+  selectInvoice(selectedInvoice.id); // refresh panel
+  showToast('✏️ Status dikemaskini: '+oldStatus+' → '+newStatus, true);
+}
+
+// ============================================================
+// PROCESS PAYMENT (Record from detail panel)
+// ============================================================
+function processPayment() {
+  if (!selectedInvoice) return;
+  if (selectedInvoice.status==='Paid') {
+    showReceiptById(selectedInvoice.id);
+    return;
+  }
+  var method = document.getElementById('d_method').value;
+  selectedInvoice.status = 'Paid';
+  selectedInvoice.method = method;
+  selectedInvoice.date   = new Date().toLocaleDateString('en-MY');
+
+  var idx = invoices.findIndex(function(i){ return i.id===selectedInvoice.id; });
+  if (idx !== -1) invoices[idx] = selectedInvoice;
+  saveInvoices(invoices);
+
+  // Add to history
+  var recId = nextReceiptId();
+  var histEntry = Object.assign({}, selectedInvoice, {
+    receipt: recId,
+    recordedBy: user.name,
+    recordedAt: selectedInvoice.date
+  });
+  history.push(histEntry);
+  saveHistory(history);
+
+  updateStats();
+  filterTable();
+  renderHistory();
+  showToast('✅ Payment berjaya direkod — '+selectedInvoice.id, true);
+
+  var paid = Object.assign({}, selectedInvoice, { receipt: recId });
+  clearDetail();
+  setTimeout(function(){ showReceiptModal(paid); }, 300);
+}
+
+function showReceiptForSelected() {
+  if (selectedInvoice) showReceiptById(selectedInvoice.id);
+}
+
+// ============================================================
+// RECORD TAB
+// ============================================================
+function updateRecordSummary() {
+  var amt  = parseFloat(document.getElementById('r_amount').value)||0;
+  var disc = parseFloat(document.getElementById('r_discount').value)||0;
+  document.getElementById('r_s_amount').textContent = 'RM '+amt.toFixed(2);
+  document.getElementById('r_s_disc').textContent   = '- RM '+disc.toFixed(2);
+  document.getElementById('r_s_total').textContent  = 'RM '+(amt-disc).toFixed(2);
+}
+
+function autoFillFromInvoice(val) {
+  var inv = invoices.find(function(i){ return i.id.toLowerCase()===val.trim().toLowerCase(); });
+  if (inv) {
+    document.getElementById('r_cust').value     = inv.customer;
+    document.getElementById('r_vehicle').value  = inv.vehicle;
+    document.getElementById('r_services').value = inv.services;
+    document.getElementById('r_amount').value   = inv.amount;
+    document.getElementById('r_discount').value = inv.discount;
+    document.getElementById('r_wo').value       = inv.wo||'';
+    document.getElementById('r_status').value   = inv.status;
+    updateRecordSummary();
+    showToast('📋 Auto-filled dari '+inv.id, false);
+  }
+}
+
+function submitRecord() {
+  var inv    = document.getElementById('r_inv').value.trim();
+  var cust   = document.getElementById('r_cust').value.trim();
+  var amt    = parseFloat(document.getElementById('r_amount').value);
+  var status = document.getElementById('r_status').value;
+
+  if (!inv)  { showToast('⚠️ Sila masukkan Invoice No.', false); return; }
+  if (!cust) { showToast('⚠️ Sila masukkan nama pelanggan.', false); return; }
+  if (!amt || amt <= 0) { showToast('⚠️ Sila masukkan jumlah yang sah.', false); return; }
+
+  // Check duplicate
+  var existsIdx = -1;
+  for (var ei=0; ei<invoices.length; ei++) {
+    if (invoices[ei].id.toLowerCase() === inv.toLowerCase()) { existsIdx = ei; break; }
+  }
+  if (existsIdx !== -1) {
+    // Update existing invoice
+    var disc   = parseFloat(document.getElementById('r_discount').value)||0;
+    var method = document.getElementById('r_method').value;
+    var dateVal= document.getElementById('r_date').value;
+    invoices[existsIdx].customer = cust;
+    invoices[existsIdx].vehicle  = document.getElementById('r_vehicle').value || invoices[existsIdx].vehicle;
+    invoices[existsIdx].services = document.getElementById('r_services').value || invoices[existsIdx].services;
+    invoices[existsIdx].amount   = amt;
+    invoices[existsIdx].discount = disc;
+    invoices[existsIdx].status   = status;
+    invoices[existsIdx].wo       = document.getElementById('r_wo').value || invoices[existsIdx].wo;
+    if (status==='Paid') invoices[existsIdx].method = method;
+    invoices[existsIdx].date = dateVal ? new Date(dateVal).toLocaleDateString('en-MY') : invoices[existsIdx].date;
+    saveInvoices(invoices);
+
+    var updatedInv = invoices[existsIdx];
+    var recIdUpd = null;
+    if (status==='Paid') {
+      recIdUpd = nextReceiptId();
+      var he = Object.assign({}, updatedInv, { receipt:recIdUpd, recordedBy:user.name, recordedAt:updatedInv.date });
+      var hIdx = -1;
+      for (var hi=0; hi<history.length; hi++) { if (history[hi].id===updatedInv.id) { hIdx=hi; break; } }
+      if (hIdx===-1) { history.push(he); } else { history[hIdx] = he; }
+      saveHistory(history);
+    }
+
+    updateStats(); filterTable(); renderHistory(); updateQuickStats();
+    showToast('✏️ Invoice '+inv+' dikemaskini!', true);
+    clearRecord();
+    if (recIdUpd) setTimeout(function(){ showReceiptModal(Object.assign({}, updatedInv, {receipt:recIdUpd})); }, 300);
+    return;
+  }
+
+  // New invoice
+  var disc   = parseFloat(document.getElementById('r_discount').value)||0;
+  var method = document.getElementById('r_method').value;
+  var dateVal= document.getElementById('r_date').value;
+  var newInv = {
+    id: inv, customer: cust,
+    vehicle:  document.getElementById('r_vehicle').value||'—',
+    services: document.getElementById('r_services').value||'—',
+    amount: amt, discount: disc, status: status,
+    date: new Date(dateVal).toLocaleDateString('en-MY'),
+    method: status==='Paid'?method:'',
+    wo: document.getElementById('r_wo').value||''
+  };
+  invoices.push(newInv);
+  saveInvoices(invoices);
+
+  var recId = null;
+  if (status==='Paid') {
+    recId = nextReceiptId();
+    history.push(Object.assign({}, newInv, { receipt:recId, recordedBy:user.name, recordedAt:newInv.date }));
+    saveHistory(history);
+  }
+
+  updateStats(); filterTable(); renderHistory(); updateQuickStats();
+  showToast('✅ Payment disimpan — '+inv, true);
+  clearRecord();
+  if (recId) setTimeout(function(){ showReceiptModal(Object.assign({}, newInv, {receipt:recId})); }, 300);
+}
+
+function clearRecord() {
+  ['r_inv','r_cust','r_vehicle','r_services','r_wo','r_notes'].forEach(function(id){ document.getElementById(id).value=''; });
+  document.getElementById('r_amount').value   = '';
+  document.getElementById('r_discount').value = '0';
+  document.getElementById('r_status').value   = 'Paid';
+  document.getElementById('r_date').valueAsDate = new Date();
+  updateRecordSummary();
+}
+
+// ============================================================
+// HISTORY TABLE
+// ============================================================
+var filteredHistory = [];
+var histPage = 1;
+var _lastHistData = null; // keep last filtered set for pagination
+
+function renderHistory(data) {
+  if (data !== undefined) {
+    _lastHistData = data;
+    histPage = 1;
+  }
+  var source = (_lastHistData !== null) ? _lastHistData : history;
+  filteredHistory = source;
+
+  var tbody = document.getElementById('historyTableBody');
+  var start = (histPage-1)*PAGE_SIZE;
+  var page  = filteredHistory.slice(start, start+PAGE_SIZE);
+
+  if (!filteredHistory.length) {
+    tbody.innerHTML = '<tr><td colspan="9"><div class="history-empty"><div class="history-empty-icon">📭</div><div>Tiada rekod pembayaran lagi.</div></div></td></tr>';
+    document.getElementById('histPagination').innerHTML = '';
+    return;
+  }
+
+  // Store entries in a temp map so onclick can reference by index safely
+  window._histPageEntries = page;
+
+  tbody.innerHTML = page.map(function(h, i) {
+    return '<tr onclick="showReceiptModal(window._histPageEntries['+i+'])" style="cursor:pointer">' +
+      '<td><b style="color:var(--green)">'+h.receipt+'</b></td>' +
+      '<td style="color:var(--accent)">'+h.id+'</td>' +
+      '<td>'+h.customer+'</td>' +
+      '<td style="color:var(--muted);font-size:12px">'+h.vehicle.split('—')[0].trim()+'</td>' +
+      '<td>'+methodIcon(h.method)+'</td>' +
+      '<td><b style="color:var(--green)">RM '+(h.amount-h.discount).toFixed(2)+'</b></td>' +
+      '<td style="color:var(--muted);font-size:12px">'+h.date+'</td>' +
+      '<td style="color:var(--muted);font-size:12px">'+(h.recordedBy||user.name)+'</td>' +
+      '<td><button class="btn btn-outline btn-sm" onclick="event.stopPropagation();showReceiptById(\''+escId(h.id)+'\')">🧾 Receipt</button></td>' +
+    '</tr>';
+  }).join('');
+
+  // Pagination
+  var total = Math.ceil(filteredHistory.length/PAGE_SIZE);
+  var c = document.getElementById('histPagination');
+  if (total <= 1) { c.innerHTML=''; return; }
+  var s2 = (histPage-1)*PAGE_SIZE+1, e2 = Math.min(histPage*PAGE_SIZE, filteredHistory.length);
+  var html = '<span>Showing '+s2+'–'+e2+' of '+filteredHistory.length+'</span><div class="page-btns">';
+  if (histPage>1) html+='<button class="page-btn" onclick="histPage='+(histPage-1)+';renderHistory()">‹</button>';
+  for(var p=1;p<=total;p++) html+='<button class="page-btn'+(p===histPage?' active':'')+'" onclick="histPage='+p+';renderHistory()">'+p+'</button>';
+  if (histPage<total) html+='<button class="page-btn" onclick="histPage='+(histPage+1)+';renderHistory()">›</button>';
+  html+='</div>';
+  c.innerHTML = html;
+}
+
+function filterHistory() {
+  var q = (document.getElementById('histSearch').value||'').toLowerCase();
+  var m = document.getElementById('histMethodFilter').value;
+  var filtered = history.filter(function(h){
+    var match = !q || h.customer.toLowerCase().includes(q) || h.receipt.toLowerCase().includes(q) || h.id.toLowerCase().includes(q);
+    var meth  = !m || h.method===m;
+    return match && meth;
+  });
+  _lastHistData = filtered;
+  histPage = 1;
+  renderHistory(filtered);
+}
+
+// ============================================================
+// RECEIPT MODAL
+// ============================================================
+function showReceiptById(id) {
+  var h = history.find(function(x){ return x.id===id; });
+  if (h) { showReceiptModal(h); return; }
+  var inv = invoices.find(function(x){ return x.id===id; });
+  if (inv) showReceiptModal(inv);
+}
+
+function showReceiptModal(inv) {
+  if (typeof inv === 'string') { try { inv = JSON.parse(inv); } catch(e){ return; } }
+  var rec = inv.receipt || inv.id;
+  document.getElementById('receiptId').textContent    = rec;
+  document.getElementById('receiptTotal').textContent = 'RM '+(inv.amount-inv.discount).toFixed(2);
+  document.getElementById('receiptBody').innerHTML = [
+    ['Invoice No.',  inv.id],
+    ['Work Order',   inv.wo||'—'],
+    ['Customer',     inv.customer],
+    ['Vehicle',      inv.vehicle],
+    ['Services',     inv.services],
+    ['Amount',       'RM '+parseFloat(inv.amount).toFixed(2)],
+    ['Discount',     '- RM '+parseFloat(inv.discount).toFixed(2)],
+    ['Method',       inv.method||'—'],
+    ['Date',         inv.date],
+    ['Recorded By',  inv.recordedBy||user.name],
+    ['Notes',        inv.notes||'—'],
+  ].map(function(r){
+    return '<div class="receipt-row"><span class="rl">'+r[0]+'</span><span class="rv">'+r[1]+'</span></div>';
+  }).join('');
+  document.getElementById('receiptModal').classList.add('open');
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+function printReceipt() {
+  window.print();
+  showToast('🖨️ Menghantar ke printer...', false);
+}
+
+// ============================================================
+// DELETE INVOICE
+// ============================================================
+function confirmDeleteInvoice() {
+  if (!selectedInvoice) return;
+  document.getElementById('confirmIcon').textContent  = '🗑️';
+  document.getElementById('confirmTitle').textContent = 'Padam Invoice?';
+  document.getElementById('confirmMsg').textContent   = 'Invoice '+selectedInvoice.id+' ('+selectedInvoice.customer+') akan dipadam secara kekal. Tindakan ini tidak boleh dibatalkan.';
+  document.getElementById('confirmOkBtn').textContent = '🗑️ Ya, Padam';
+  confirmCallback = function() {
+    var id = selectedInvoice.id;
+    invoices = invoices.filter(function(i){ return i.id!==id; });
+    history  = history.filter(function(h){ return h.id!==id; });
+    saveInvoices(invoices);
+    saveHistory(history);
+    updateStats(); filterTable(); renderHistory(); updateQuickStats();
+    clearDetail();
+    showToast('🗑️ Invoice '+id+' dipadam.', false);
+  };
+  document.getElementById('confirmModal').classList.add('open');
+}
+
+function confirmClearHistory() {
+  document.getElementById('confirmIcon').textContent  = '🗑️';
+  document.getElementById('confirmTitle').textContent = 'Kosongkan Semua History?';
+  document.getElementById('confirmMsg').textContent   = 'Semua '+history.length+' rekod pembayaran akan dipadam secara kekal. Invoice masih kekal.';
+  document.getElementById('confirmOkBtn').textContent = '🗑️ Ya, Kosongkan';
+  confirmCallback = function() {
+    history = [];
+    saveHistory(history);
+    renderHistory();
+    showToast('🗑️ Semua history dipadam.', false);
+  };
+  document.getElementById('confirmModal').classList.add('open');
+}
+
+function executeConfirm() {
+  closeModal('confirmModal');
+  if (confirmCallback) { confirmCallback(); confirmCallback = null; }
+}
+
+// ============================================================
+// EXPORT
+// ============================================================
+function exportInvoices() {
+  var rows = [['Invoice No.','Customer','Vehicle','Services','Amount','Discount','Total','Status','Method','Date','Work Order']];
+  invoices.forEach(function(i){
+    rows.push([i.id,i.customer,i.vehicle,i.services,i.amount,i.discount,(i.amount-i.discount),i.status,i.method||'',i.date,i.wo||'']);
+  });
+  downloadCSV(rows, 'autocare_invoices_'+Date.now()+'.csv');
+  showToast('⬇️ Invoice CSV dieksport!', false);
+}
+
+function exportHistory() {
+  var rows = [['Receipt','Invoice No.','Customer','Vehicle','Services','Method','Amount','Discount','Total','Date','Recorded By']];
+  history.forEach(function(h){
+    rows.push([h.receipt,h.id,h.customer,h.vehicle,h.services,h.method,h.amount,h.discount,(h.amount-h.discount),h.date,h.recordedBy||user.name]);
+  });
+  downloadCSV(rows, 'autocare_history_'+Date.now()+'.csv');
+  showToast('⬇️ History CSV dieksport!', false);
+}
+
+function downloadCSV(rows, filename) {
+  var csv = rows.map(function(r){ return r.map(function(c){ return '"'+String(c||'').replace(/"/g,'""')+'"'; }).join(','); }).join('\n');
+  var a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(csv);
+  a.download = filename;
+  a.click();
+}
+
+// ============================================================
+// TABS
+// ============================================================
+function switchTab(id, btn) {
+  ['invoices','record','history'].forEach(function(t){
+    document.getElementById('tab-'+t).style.display='none';
+  });
+  document.getElementById('tab-'+id).style.display='block';
+  document.querySelectorAll('.tab-btn').forEach(function(b){ b.className='tab-btn'; });
+  btn.className = 'tab-btn active green';
+  if (id==='history') { histPage=1; _lastHistData=null; renderHistory(); }
+  if (id==='record')  { updateQuickStats(); }
+}
+
+// ============================================================
+// TOAST
+// ============================================================
+var toastTimer;
+function showToast(msg, isSuccess) {
+  clearTimeout(toastTimer);
+  document.getElementById('toastMsg').textContent = msg;
+  var t = document.getElementById('toast');
+  t.style.borderColor = isSuccess ? 'rgba(64,200,128,0.4)' : 'rgba(232,160,32,0.4)';
+  t.style.opacity='1'; t.style.transform='translateY(0)';
+  toastTimer = setTimeout(function(){ t.style.opacity='0'; t.style.transform='translateY(10px)'; }, 3000);
+}
+
+// ============================================================
+// AUTH
+// ============================================================
+function logout() {
+  sessionStorage.removeItem('wms_user');
+  window.location.href='login.html';
+}
+
+// Close modals on overlay click
+['receiptModal','confirmModal'].forEach(function(id){
+  document.getElementById(id).addEventListener('click', function(e){
+    if (e.target===this) closeModal(id);
+  });
+});
+
+// Keyboard ESC to close
+document.addEventListener('keydown', function(e){
+  if (e.key==='Escape') {
+    closeModal('receiptModal');
+    closeModal('confirmModal');
+  }
+});
+</script>
+</body>
+</html>

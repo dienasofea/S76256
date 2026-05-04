@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Manage Booking — AutoCare WMS</title>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg:#0d0f14; --surface:#161a23; --surface2:#1e2333; --surface3:#252b3b;
+      --accent:#e8a020; --accent2:#f0c060;
+      --red:#e84040; --blue:#4080e8; --green:#40c880; --purple:#a060e8; --orange:#f07040;
+      --text:#eef0f5; --muted:#7a8099; --border:rgba(255,255,255,0.07);
+    }
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden;}
+
+    body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(232,160,32,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(232,160,32,0.025) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0;}
+
+    /* ── SIDEBAR ── */
+    .sidebar{position:fixed;left:0;top:0;bottom:0;width:220px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:10;}
+    .logo-area{padding:28px 24px 24px;border-bottom:1px solid var(--border);}
+    .logo-icon{width:40px;height:40px;background:var(--accent);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:12px;}
+    .logo-text{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;letter-spacing:.5px;line-height:1.1;}
+    .logo-text span{display:block;font-size:11px;font-weight:400;color:var(--muted);letter-spacing:1px;text-transform:uppercase;font-family:'DM Sans',sans-serif;margin-top:2px;}
+    .nav-section{flex:1;padding:20px 12px;overflow-y:auto;}
+    .nav-label{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);padding:0 12px;margin-bottom:8px;margin-top:16px;}
+    .nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;cursor:pointer;font-size:14px;color:var(--muted);transition:all .2s;text-decoration:none;position:relative;}
+    .nav-item:hover{background:var(--surface2);color:var(--text);}
+    .nav-item.active{background:rgba(232,160,32,0.12);color:var(--accent);font-weight:500;}
+    .nav-item.active::before{content:'';position:absolute;left:0;top:8px;bottom:8px;width:3px;background:var(--accent);border-radius:0 3px 3px 0;}
+    .nav-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+    .sidebar-footer{padding:16px 20px;border-top:1px solid var(--border);}
+    .user-card{display:flex;align-items:center;gap:10px;}
+    .avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--red));display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;flex-shrink:0;}
+    .user-info{flex:1;min-width:0;}
+    .user-name{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .user-role{font-size:11px;color:var(--muted);}
+    .logout-btn{cursor:pointer;color:var(--muted);font-size:18px;flex-shrink:0;transition:color .2s;background:none;border:none;padding:0;line-height:1;}
+    .logout-btn:hover{color:var(--red);}
+
+    /* ── MAIN ── */
+    .main{margin-left:220px;min-height:100vh;position:relative;z-index:1;}
+    .topbar{display:flex;align-items:center;justify-content:space-between;padding:20px 32px;border-bottom:1px solid var(--border);background:rgba(13,15,20,.8);backdrop-filter:blur(8px);position:sticky;top:0;z-index:5;}
+    .page-title{font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:700;}
+    .topbar-right{display:flex;align-items:center;gap:12px;}
+    .date-badge{font-size:12px;color:var(--muted);background:var(--surface2);padding:6px 14px;border-radius:20px;border:1px solid var(--border);}
+    .back-btn{display:flex;align-items:center;gap:6px;padding:7px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;font-size:13px;color:var(--muted);cursor:pointer;text-decoration:none;transition:.2s;}
+    .back-btn:hover{color:var(--text);background:var(--surface3);}
+
+    .content{padding:32px;}
+
+    /* ── SHARED COMPONENTS ── */
+    .section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px;}
+    .section-title{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;}
+    .section-title span{color:var(--muted);font-size:14px;font-weight:400;margin-left:8px;font-family:'DM Sans',sans-serif;}
+    .badge{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:500;}
+    .badge-pending {background:rgba(232,160,32,.12);color:var(--accent);}
+    .badge-confirmed{background:rgba(64,128,232,.12);color:var(--blue);}
+    .badge-inprogress{background:rgba(160,96,232,.12);color:var(--purple);}
+    .badge-done{background:rgba(64,200,128,.12);color:var(--green);}
+    .badge-cancelled{background:rgba(232,64,64,.12);color:var(--red);}
+
+    /* ─────────────────────────────────────────────
+       CUSTOMER VIEW
+    ───────────────────────────────────────────── */
+    #customerView .hero{background:linear-gradient(135deg,var(--surface2) 0%,rgba(232,160,32,.07) 100%);border:1px solid rgba(232,160,32,.18);border-radius:16px;padding:28px 32px;margin-bottom:32px;position:relative;overflow:hidden;}
+    #customerView .hero::after{content:'📅';position:absolute;right:28px;top:50%;transform:translateY(-50%);font-size:80px;opacity:.07;}
+    #customerView .hero h2{font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:800;margin-bottom:6px;}
+    #customerView .hero h2 span{color:var(--accent);}
+    #customerView .hero p{color:var(--muted);font-size:14px;}
+
+    /* Steps indicator */
+    .steps-row{display:flex;align-items:center;gap:0;margin-bottom:32px;}
+    .step-chip{display:flex;align-items:center;gap:8px;padding:8px 18px;border-radius:8px;font-size:13px;font-weight:500;color:var(--muted);background:var(--surface);border:1px solid var(--border);transition:.2s;flex:1;justify-content:center;}
+    .step-chip.active{background:rgba(232,160,32,.1);color:var(--accent);border-color:rgba(232,160,32,.3);}
+    .step-chip.done{background:rgba(64,200,128,.08);color:var(--green);border-color:rgba(64,200,128,.2);}
+    .step-chip .step-num{width:20px;height:20px;border-radius:50%;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;}
+    .step-chip.active .step-num{background:var(--accent);color:#0d0f14;}
+    .step-chip.done .step-num{background:var(--green);color:#0d0f14;}
+    .step-divider{width:24px;height:1px;background:var(--border);flex-shrink:0;}
+
+    /* Booking form card */
+    .form-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px;margin-bottom:20px;animation:fadeUp .4s ease both;}
+    .form-card-title{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;margin-bottom:20px;display:flex;align-items:center;gap:10px;}
+    .form-card-title .icon{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px;}
+
+    .form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+    .form-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
+    .form-group{margin-bottom:16px;}
+    .form-label{display:block;font-size:11px;font-weight:500;color:var(--muted);margin-bottom:6px;letter-spacing:.5px;text-transform:uppercase;}
+    .form-label .req{color:var(--accent);}
+    .form-input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:11px 14px;font-size:14px;color:var(--text);font-family:'DM Sans',sans-serif;outline:none;transition:border-color .2s,box-shadow .2s;}
+    .form-input:focus{border-color:rgba(232,160,32,.5);box-shadow:0 0 0 3px rgba(232,160,32,.07);}
+    .form-input::placeholder{color:var(--muted);}
+    .form-input.error{border-color:rgba(232,64,64,.5);}
+    select.form-input{cursor:pointer;}
+    select.form-input option{background:var(--surface2);}
+    textarea.form-input{resize:vertical;min-height:90px;}
+    .input-err{font-size:11px;color:var(--red);margin-top:5px;display:none;}
+
+    /* Service selector */
+    .services-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:8px;}
+    .svc-chip{padding:12px 10px;border:2px solid var(--border);border-radius:10px;cursor:pointer;transition:.2s;text-align:center;background:var(--surface2);}
+    .svc-chip:hover{border-color:rgba(232,160,32,.4);background:rgba(232,160,32,.04);}
+    .svc-chip.selected{border-color:var(--accent);background:rgba(232,160,32,.08);}
+    .svc-chip .svc-icon{font-size:22px;margin-bottom:6px;}
+    .svc-chip .svc-name{font-size:12px;font-weight:500;margin-bottom:2px;}
+    .svc-chip .svc-price{font-size:11px;color:var(--muted);}
+    .svc-chip.selected .svc-price{color:var(--accent);}
+
+    /* Time slots */
+    .slots-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+    .slot{padding:10px;border:1px solid var(--border);border-radius:8px;text-align:center;font-size:13px;cursor:pointer;background:var(--surface2);transition:.2s;}
+    .slot:hover:not(.taken){border-color:rgba(232,160,32,.4);background:rgba(232,160,32,.06);color:var(--accent);}
+    .slot.selected{border-color:var(--accent);background:rgba(232,160,32,.12);color:var(--accent);font-weight:600;}
+    .slot.taken{opacity:.35;cursor:not-allowed;text-decoration:line-through;}
+
+    /* Nav buttons */
+    .nav-btns{display:flex;gap:12px;margin-top:8px;}
+    .btn{padding:11px 24px;border-radius:9px;font-size:14px;font-weight:600;cursor:pointer;border:none;transition:all .2s;font-family:'DM Sans',sans-serif;}
+    .btn-primary{background:var(--accent);color:#0d0f14;}
+    .btn-primary:hover{background:var(--accent2);transform:translateY(-1px);box-shadow:0 6px 20px rgba(232,160,32,.2);}
+    .btn-secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border);}
+    .btn-secondary:hover{background:var(--surface3);}
+    .btn-full{width:100%;}
+
+    /* Summary card */
+    .summary-table{width:100%;}
+    .summary-row{display:flex;justify-content:space-between;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px;}
+    .summary-row:last-child{border-bottom:none;}
+    .summary-row .key{color:var(--muted);min-width:140px;}
+    .summary-row .val{font-weight:500;text-align:right;max-width:240px;}
+    .price-total{font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:700;color:var(--accent);}
+
+    /* My Bookings list */
+    .my-bookings{margin-top:32px;}
+    .booking-card-cust{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px 20px;display:flex;align-items:center;gap:16px;margin-bottom:10px;transition:.2s;animation:fadeUp .4s ease both;}
+    .booking-card-cust:hover{border-color:rgba(232,160,32,.2);}
+    .bk-date-box{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;text-align:center;min-width:60px;flex-shrink:0;}
+    .bk-day{font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:800;line-height:1;color:var(--accent);}
+    .bk-month{font-size:11px;color:var(--muted);text-transform:uppercase;}
+    .bk-info{flex:1;}
+    .bk-title{font-size:14px;font-weight:600;margin-bottom:4px;}
+    .bk-meta{font-size:12px;color:var(--muted);}
+
+    /* ─────────────────────────────────────────────
+       ADMIN VIEW
+    ───────────────────────────────────────────── */
+    #adminView .filter-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+    #adminView .filter-btn{padding:7px 16px;border-radius:8px;font-size:13px;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--muted);transition:.2s;font-family:'DM Sans',sans-serif;}
+    #adminView .filter-btn:hover{color:var(--text);background:var(--surface3);}
+    #adminView .filter-btn.active{background:rgba(232,160,32,.1);color:var(--accent);border-color:rgba(232,160,32,.3);}
+    #adminView .search-box{flex:1;min-width:180px;position:relative;}
+    #adminView .search-box input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:8px 14px 8px 36px;font-size:13px;color:var(--text);font-family:'DM Sans',sans-serif;outline:none;transition:.2s;}
+    #adminView .search-box input:focus{border-color:rgba(232,160,32,.4);}
+    #adminView .search-box input::placeholder{color:var(--muted);}
+    #adminView .search-icon{position:absolute;left:11px;top:50%;transform:translateY(-50%);font-size:14px;color:var(--muted);}
+
+    /* Stats row */
+    .admin-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:28px;}
+    .astat{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px;position:relative;overflow:hidden;}
+    .astat::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:12px 12px 0 0;background:var(--c,var(--accent));}
+    .astat-val{font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:700;color:var(--c,var(--accent));line-height:1;margin-bottom:4px;}
+    .astat-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;}
+
+    /* Booking list */
+    .booking-list{display:flex;flex-direction:column;gap:10px;}
+    .bk-row{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 20px;display:grid;grid-template-columns:64px 1fr auto auto auto;align-items:center;gap:16px;cursor:pointer;transition:all .2s;animation:fadeUp .35s ease both;}
+    .bk-row:hover{border-color:rgba(232,160,32,.25);background:rgba(232,160,32,.02);transform:translateX(2px);}
+    .bk-num{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--muted);}
+    .bk-main{}
+    .bk-customer{font-size:14px;font-weight:600;margin-bottom:3px;}
+    .bk-details{font-size:12px;color:var(--muted);}
+    .bk-datetime{text-align:right;}
+    .bk-date-str{font-size:13px;font-weight:600;color:var(--text);}
+    .bk-time-str{font-size:12px;color:var(--muted);}
+    .bk-svc{font-size:12px;color:var(--muted);text-align:right;}
+    .bk-price-col{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;color:var(--green);white-space:nowrap;}
+
+    .empty-state{text-align:center;padding:60px 20px;color:var(--muted);}
+    .empty-state .empty-icon{font-size:48px;margin-bottom:16px;opacity:.4;}
+    .empty-state p{font-size:14px;}
+
+    /* ── MODAL ── */
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);z-index:50;display:flex;align-items:center;justify-content:center;padding:24px;opacity:0;pointer-events:none;transition:opacity .3s;}
+    .modal-overlay.open{opacity:1;pointer-events:all;}
+    .modal{background:var(--surface);border:1px solid var(--border);border-radius:18px;width:100%;max-width:620px;max-height:90vh;overflow-y:auto;transform:translateY(20px) scale(.97);transition:transform .3s;box-shadow:0 32px 80px rgba(0,0,0,.5);}
+    .modal-overlay.open .modal{transform:translateY(0) scale(1);}
+    .modal-header{padding:24px 28px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--surface);z-index:2;}
+    .modal-title{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;}
+    .modal-title span{color:var(--accent);}
+    .modal-close{width:32px;height:32px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--muted);transition:.2s;}
+    .modal-close:hover{background:var(--surface3);color:var(--text);}
+    .modal-body{padding:24px 28px;}
+
+    .detail-section{margin-bottom:24px;}
+    .detail-section-title{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border);}
+    .detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+    .detail-item{}
+    .detail-key{font-size:11px;color:var(--muted);margin-bottom:3px;text-transform:uppercase;letter-spacing:.5px;}
+    .detail-val{font-size:14px;font-weight:500;}
+
+    .svc-tag{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;background:rgba(232,160,32,.09);border:1px solid rgba(232,160,32,.2);border-radius:20px;font-size:13px;color:var(--accent);margin:4px 4px 4px 0;}
+
+    .modal-actions{padding:0 28px 24px;display:flex;gap:10px;}
+    .btn-confirm{background:var(--blue);color:#fff;}
+    .btn-confirm:hover{background:#5090f0;transform:translateY(-1px);}
+    .btn-reject{background:rgba(232,64,64,.1);color:var(--red);border:1px solid rgba(232,64,64,.2);}
+    .btn-reject:hover{background:rgba(232,64,64,.15);}
+    .btn-complete{background:rgba(64,200,128,.1);color:var(--green);border:1px solid rgba(64,200,128,.2);}
+    .btn-complete:hover{background:rgba(64,200,128,.15);}
+
+    /* Success overlay */
+    .success-overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);backdrop-filter:blur(6px);z-index:100;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .3s;}
+    .success-overlay.show{opacity:1;pointer-events:all;}
+    .success-box{background:var(--surface);border:1px solid rgba(64,200,128,.3);border-radius:20px;padding:40px;text-align:center;max-width:420px;transform:scale(.9);transition:transform .3s;}
+    .success-overlay.show .success-box{transform:scale(1);}
+    .success-check{width:72px;height:72px;background:rgba(64,200,128,.1);border:2px solid var(--green);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:32px;margin:0 auto 20px;}
+    .success-ttl{font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:800;margin-bottom:8px;}
+    .success-ttl span{color:var(--green);}
+    .success-sub{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:20px;}
+    .success-ref{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;color:var(--accent);background:rgba(232,160,32,.08);border:1px solid rgba(232,160,32,.2);border-radius:10px;padding:10px 20px;margin-bottom:24px;display:inline-block;}
+
+    @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+  </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="logo-area">
+    <div class="logo-icon">🔧</div>
+    <div class="logo-text">AutoCare<span>Workshop Management</span></div>
+  </div>
+  <nav class="nav-section">
+    <div class="nav-label">Main</div>
+    <a class="nav-item" href="homepage.html"><div class="nav-dot" style="background:#7a8099"></div>Dashboard</a>
+    <div class="nav-label">Modules</div>
+    <a class="nav-item active" href="booking.html"><div class="nav-dot" style="background:#e8a020"></div> Booking</a>
+    <a class="nav-item" href="services.html"><div class="nav-dot" style="background:#f0c060"></div> Services</a>
+    <a class="nav-item" href="workorder.html"><div class="nav-dot" style="background:#4080e8"></div> Work Order</a>
+    <a class="nav-item" href="payment.html"><div class="nav-dot" style="background:#40c880"></div> Payment</a>
+    <a class="nav-item" href="inventory.html"><div class="nav-dot" style="background:#a060e8"></div> Inventory</a>
+    <div class="nav-label">System</div>
+    <a class="nav-item" href="reports.html"><div class="nav-dot" style="background:#7a8099"></div>Reports</a>
+    <a class="nav-item" href="settings.html"><div class="nav-dot" style="background:#7a8099"></div>Settings</a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="avatar" id="sidebarAvatar">A</div>
+      <div class="user-info">
+        <div class="user-name" id="sidebarName">Admin</div>
+        <div class="user-role" id="sidebarRole">Administrator</div>
+      </div>
+      <button class="logout-btn" onclick="logout()">⏻</button>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <div class="topbar">
+    <div class="page-title" id="pageTitle">Manage Booking</div>
+    <div class="topbar-right">
+      <div class="date-badge" id="dateDisplay"></div>
+      <a href="homepage.html" class="back-btn">← Dashboard</a>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ════════════════════════════════
+         CUSTOMER VIEW
+    ════════════════════════════════ -->
+    <div id="customerView" style="display:none">
+
+      <div class="hero">
+        <h2>Buat <span>Tempahan</span> Servis</h2>
+        <p>Isi borang di bawah untuk menempah slot servis kenderaan anda.</p>
+      </div>
+
+      <!-- Steps indicator -->
+      <div class="steps-row">
+        <div class="step-chip active" id="sc1"><div class="step-num">1</div> Kenderaan</div>
+        <div class="step-divider"></div>
+        <div class="step-chip" id="sc2"><div class="step-num">2</div> Servis & Masa</div>
+        <div class="step-divider"></div>
+        <div class="step-chip" id="sc3"><div class="step-num">3</div> Semak & Hantar</div>
+      </div>
+
+      <!-- STEP 1: Vehicle -->
+      <div id="cStep1">
+        <div class="form-card">
+          <div class="form-card-title">
+            <div class="icon" style="background:rgba(232,160,32,.12)">🚗</div>
+            Maklumat Kenderaan
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">No. Plat <span class="req">*</span></label>
+              <input class="form-input" type="text" id="bkPlate" placeholder="WXY 1234" oninput="this.value=this.value.toUpperCase()"/>
+              <div class="input-err" id="err-bkPlate">Sila masukkan no. plat</div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Jenis Kenderaan <span class="req">*</span></label>
+              <select class="form-input" id="bkCarType">
+                <option value="">-- Pilih --</option>
+                <option>Sedan</option><option>SUV / 4WD</option><option>MPV</option>
+                <option>Hatchback</option><option>Pickup Truck</option><option>Van</option><option>Motosikal</option>
+              </select>
+              <div class="input-err" id="err-bkCarType">Sila pilih jenis kenderaan</div>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Jenama <span class="req">*</span></label>
+              <input class="form-input" type="text" id="bkBrand" placeholder="Proton, Perodua, Toyota..."/>
+              <div class="input-err" id="err-bkBrand">Sila masukkan jenama kereta</div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Model <span class="req">*</span></label>
+              <input class="form-input" type="text" id="bkModel" placeholder="Saga, Myvi, Vios..."/>
+              <div class="input-err" id="err-bkModel">Sila masukkan model kereta</div>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Tahun</label>
+              <input class="form-input" type="number" id="bkYear" placeholder="2020" min="1990" max="2025"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Warna</label>
+              <input class="form-input" type="text" id="bkColor" placeholder="Putih, Hitam..."/>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Adakah terdapat sebarang masalah atau aduan?</label>
+            <textarea class="form-input" id="bkProblem" placeholder="Contoh: Bunyi pelik dari tayar depan, AC tidak sejuk..."></textarea>
+          </div>
+        </div>
+        <div class="nav-btns">
+          <button class="btn btn-primary" onclick="cNext(1)">Seterusnya — Pilih Servis →</button>
+        </div>
+      </div>
+
+      <!-- STEP 2: Service & Time -->
+      <div id="cStep2" style="display:none">
+        <div class="form-card">
+          <div class="form-card-title">
+            <div class="icon" style="background:rgba(240,192,96,.12)">🔧</div>
+            Pilih Servis
+          </div>
+          <div class="services-grid" id="servicesGrid"></div>
+          <div class="input-err" id="err-svc" style="margin-top:4px">Sila pilih sekurang-kurangnya satu servis</div>
+        </div>
+        <div class="form-card" style="animation-delay:.1s">
+          <div class="form-card-title">
+            <div class="icon" style="background:rgba(64,128,232,.12)">📅</div>
+            Pilih Tarikh & Masa
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Tarikh <span class="req">*</span></label>
+              <input class="form-input" type="date" id="bkDate"/>
+              <div class="input-err" id="err-bkDate">Sila pilih tarikh</div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Masa Yang Dipilih</label>
+              <div style="font-size:13px;color:var(--muted);padding-top:12px" id="selectedTimeDisplay">Belum dipilih</div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Slot Masa <span class="req">*</span></label>
+            <div class="slots-grid" id="slotsGrid"></div>
+            <div class="input-err" id="err-slot">Sila pilih slot masa</div>
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label">Nota Tambahan</label>
+            <textarea class="form-input" id="bkNote" placeholder="Sebarang permintaan khas atau nota untuk mekanik..." style="min-height:70px"></textarea>
+          </div>
+        </div>
+        <div class="nav-btns">
+          <button class="btn btn-secondary" onclick="cBack(2)">← Kembali</button>
+          <button class="btn btn-primary" onclick="cNext(2)">Seterusnya — Semak Tempahan →</button>
+        </div>
+      </div>
+
+      <!-- STEP 3: Summary -->
+      <div id="cStep3" style="display:none">
+        <div class="form-card" style="animation-delay:.05s">
+          <div class="form-card-title">
+            <div class="icon" style="background:rgba(64,200,128,.12)">📋</div>
+            Semak Tempahan Anda
+          </div>
+
+          <div style="margin-bottom:20px">
+            <div class="detail-section-title" style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border)">Kenderaan</div>
+            <div class="detail-grid">
+              <div class="detail-item"><div class="detail-key">No. Plat</div><div class="detail-val" id="sum-plate">—</div></div>
+              <div class="detail-item"><div class="detail-key">Jenis</div><div class="detail-val" id="sum-type">—</div></div>
+              <div class="detail-item"><div class="detail-key">Kenderaan</div><div class="detail-val" id="sum-car">—</div></div>
+              <div class="detail-item"><div class="detail-key">Tahun / Warna</div><div class="detail-val" id="sum-yearcolor">—</div></div>
+            </div>
+          </div>
+
+          <div style="margin-bottom:20px">
+            <div class="detail-section-title" style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border)">Servis & Jadual</div>
+            <div style="margin-bottom:10px" id="sum-svcs"></div>
+            <div class="detail-grid">
+              <div class="detail-item"><div class="detail-key">Tarikh</div><div class="detail-val" id="sum-date">—</div></div>
+              <div class="detail-item"><div class="detail-key">Masa</div><div class="detail-val" id="sum-time">—</div></div>
+            </div>
+          </div>
+
+          <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:13px;color:var(--muted)">Anggaran Jumlah</span>
+            <span class="price-total" id="sum-price">RM 0</span>
+          </div>
+        </div>
+        <div class="nav-btns">
+          <button class="btn btn-secondary" onclick="cBack(3)">← Kembali</button>
+          <button class="btn btn-primary" onclick="submitBooking()">✓ Hantar Tempahan</button>
+        </div>
+      </div>
+
+      <!-- My Bookings -->
+      <div class="my-bookings" id="myBookingsSection">
+        <div class="section-header">
+          <div class="section-title">Tempahan Saya <span id="myBkCount"></span></div>
+        </div>
+        <div id="myBookingsList"></div>
+      </div>
+
+    </div><!-- /customerView -->
+
+    <!-- ════════════════════════════════
+         ADMIN / MECHANIC VIEW
+    ════════════════════════════════ -->
+    <div id="adminView" style="display:none">
+
+      <!-- Stats -->
+      <div class="admin-stats">
+        <div class="astat" style="--c:var(--accent)"><div class="astat-val" id="aStat-total">0</div><div class="astat-label">Total Booking</div></div>
+        <div class="astat" style="--c:var(--accent)"><div class="astat-val" id="aStat-pending">0</div><div class="astat-label">Pending</div></div>
+        <div class="astat" style="--c:var(--blue)"><div class="astat-val" id="aStat-confirmed">0</div><div class="astat-label">Confirmed</div></div>
+        <div class="astat" style="--c:var(--green)"><div class="astat-val" id="aStat-done">0</div><div class="astat-label">Completed</div></div>
+      </div>
+
+      <div class="section-header">
+        <div class="section-title">Senarai Booking <span id="adminBkCount"></span></div>
+        <div class="filter-bar">
+          <div class="search-box">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="searchInput" placeholder="Cari nama, plat, servis..." oninput="renderAdminList()"/>
+          </div>
+          <button class="filter-btn active" data-filter="all" onclick="setFilter('all', this)">Semua</button>
+          <button class="filter-btn" data-filter="pending"   onclick="setFilter('pending', this)">Pending</button>
+          <button class="filter-btn" data-filter="confirmed" onclick="setFilter('confirmed', this)">Confirmed</button>
+          <button class="filter-btn" data-filter="done"      onclick="setFilter('done', this)">Completed</button>
+        </div>
+      </div>
+
+      <div class="booking-list" id="adminBookingList"></div>
+
+    </div><!-- /adminView -->
+
+  </div><!-- /content -->
+</main><!-- /main -->
+
+<!-- BOOKING DETAIL MODAL -->
+<div class="modal-overlay" id="detailModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">Booking <span id="mRef">#BK-0001</span></div>
+        <div id="mStatusBadge" style="margin-top:6px"></div>
+      </div>
+      <div class="modal-close" onclick="closeModal()">✕</div>
+    </div>
+    <div class="modal-body">
+      <div class="detail-section">
+        <div class="detail-section-title">👤 Maklumat Pelanggan</div>
+        <div class="detail-grid">
+          <div class="detail-item"><div class="detail-key">Nama</div><div class="detail-val" id="m-custName">—</div></div>
+          <div class="detail-item"><div class="detail-key">Telefon</div><div class="detail-val" id="m-custPhone">—</div></div>
+          <div class="detail-item"><div class="detail-key">Email</div><div class="detail-val" id="m-custEmail">—</div></div>
+          <div class="detail-item"><div class="detail-key">ID Akaun</div><div class="detail-val" id="m-custId">—</div></div>
+        </div>
+      </div>
+      <div class="detail-section">
+        <div class="detail-section-title">🚗 Maklumat Kenderaan</div>
+        <div class="detail-grid">
+          <div class="detail-item"><div class="detail-key">No. Plat</div><div class="detail-val" id="m-plate">—</div></div>
+          <div class="detail-item"><div class="detail-key">Jenis</div><div class="detail-val" id="m-cartype">—</div></div>
+          <div class="detail-item"><div class="detail-key">Kenderaan</div><div class="detail-val" id="m-car">—</div></div>
+          <div class="detail-item"><div class="detail-key">Tahun / Warna</div><div class="detail-val" id="m-yearcolor">—</div></div>
+        </div>
+        <div style="margin-top:12px">
+          <div class="detail-key" style="margin-bottom:6px">Masalah / Aduan</div>
+          <div style="font-size:13px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);line-height:1.5" id="m-problem">—</div>
+        </div>
+      </div>
+      <div class="detail-section">
+        <div class="detail-section-title">🔧 Servis Dipinta</div>
+        <div id="m-svcs" style="margin-bottom:14px"></div>
+        <div class="detail-grid">
+          <div class="detail-item"><div class="detail-key">Tarikh</div><div class="detail-val" id="m-date">—</div></div>
+          <div class="detail-item"><div class="detail-key">Masa</div><div class="detail-val" id="m-time">—</div></div>
+          <div class="detail-item"><div class="detail-key">Anggaran Harga</div><div class="detail-val" style="color:var(--green)" id="m-price">—</div></div>
+          <div class="detail-item"><div class="detail-key">Submitted</div><div class="detail-val" id="m-submitted">—</div></div>
+        </div>
+        <div style="margin-top:12px" id="m-noteWrap">
+          <div class="detail-key" style="margin-bottom:6px">Nota Pelanggan</div>
+          <div style="font-size:13px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);line-height:1.5" id="m-note">—</div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-actions" id="modalActions"></div>
+  </div>
+</div>
+
+<!-- SUCCESS OVERLAY -->
+<div class="success-overlay" id="successOverlay">
+  <div class="success-box">
+    <div class="success-check">✓</div>
+    <div class="success-ttl">Tempahan <span>Berjaya!</span></div>
+    <div class="success-sub">Tempahan anda telah dihantar. Kami akan hubungi anda untuk pengesahan.</div>
+    <div class="success-ref" id="successRef">BK-0001</div>
+    <button class="btn btn-primary btn-full" onclick="afterSuccess()">Lihat Tempahan Saya</button>
+  </div>
+</div>
+
+<script>
+// ── Session ────────────────────────────────────────────────
+var user = {name:'Guest',role:'guest',id:'GUEST'};
+try{ var raw=sessionStorage.getItem('wms_user'); if(raw) user=JSON.parse(raw); }catch(e){}
+
+var roleLabels={admin:'Administrator',mechanic:'Mechanic',customer:'Customer',guest:'Guest'};
+document.getElementById('sidebarAvatar').textContent = user.name.charAt(0).toUpperCase();
+document.getElementById('sidebarName').textContent   = user.name;
+document.getElementById('sidebarRole').textContent   = roleLabels[user.role]||user.role;
+document.getElementById('dateDisplay').textContent   = new Date().toLocaleDateString('en-MY',{weekday:'short',day:'numeric',month:'long',year:'numeric'});
+
+function logout(){ sessionStorage.removeItem('wms_user'); window.location.href='login.html'; }
+
+// ── Storage helpers ────────────────────────────────────────
+function getBookings(){ try{ return JSON.parse(localStorage.getItem('wms_bookings')||'[]'); }catch(e){return[];} }
+function saveBookings(list){ localStorage.setItem('wms_bookings',JSON.stringify(list)); }
+
+function getCustomers(){ try{ return JSON.parse(localStorage.getItem('wms_customers')||'[]'); }catch(e){return[];} }
+
+// ── Services master list ───────────────────────────────────
+var SERVICES = [
+  {id:'oil',   name:'Oil Change',           icon:'🛢️', price:80},
+  {id:'tyre',  name:'Tyre Check',           icon:'🔄', price:40},
+  {id:'brake', name:'Brake Service',        icon:'🛑', price:120},
+  {id:'ac',    name:'Air Conditioning Service', icon:'❄️', price:150},
+  {id:'bat',   name:'Battery Check',        icon:'🔋', price:30},
+  {id:'wash',  name:'Car Wash',             icon:'🚿', price:25},
+  {id:'align', name:'Wheel Alignment',      icon:'⚙️', price:80},
+  {id:'full',  name:'Full Service',         icon:'🏆', price:320},
+  {id:'diag',  name:'Computer Diagnosis',   icon:'💻', price:60},
+];
+
+var TIME_SLOTS=['8:30 AM','8:30 AM','9:00 AM','9:30 AM','10:00 AM','10:30 AM','11:00 AM','11:30 AM',
+                '2:00 PM','2:30 PM','3:00 PM','3:30 PM','4:00 PM','4:30 PM','5:00 PM','5:30 PM'];
+
+// ── State ──────────────────────────────────────────────────
+var bkState = { services:[], slot:null };
+var activeFilter = 'all';
+var currentModalBk = null;
+
+// ── INIT ───────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', function(){
+  seedDemoBookings();
+
+  if(user.role==='customer'||user.role==='guest'){
+    document.getElementById('customerView').style.display='block';
+    document.getElementById('pageTitle').textContent='Buat Tempahan';
+    initCustomerView();
+  } else {
+    document.getElementById('adminView').style.display='block';
+    renderAdminList();
+    updateAdminStats();
+  }
+});
+
+// ══════════════════════════════════════
+// CUSTOMER FLOW
+// ══════════════════════════════════════
+function initCustomerView(){
+  // Pre-fill vehicle from registration
+  if(user.role==='customer'){
+    var customers=getCustomers();
+    var me=customers.find(function(c){ return c.email===user.id; });
+    if(me){
+      if(me.plate)  document.getElementById('bkPlate').value=me.plate;
+      if(me.cartype)document.getElementById('bkCarType').value=me.cartype;
+      if(me.carbrand)document.getElementById('bkBrand').value=me.carbrand;
+      if(me.carmodel)document.getElementById('bkModel').value=me.carmodel;
+    }
+  }
+
+  // Set min date = tomorrow
+  var tom=new Date(); tom.setDate(tom.getDate()+1);
+  document.getElementById('bkDate').min=tom.toISOString().split('T')[0];
+  document.getElementById('bkDate').addEventListener('change', renderSlots);
+
+  // Services grid
+  var sg=document.getElementById('servicesGrid');
+  sg.innerHTML='';
+  SERVICES.forEach(function(s){
+    var d=document.createElement('div');
+    d.className='svc-chip'; d.dataset.id=s.id;
+    d.innerHTML='<div class="svc-icon">'+s.icon+'</div><div class="svc-name">'+s.name+'</div><div class="svc-price">RM '+s.price+'</div>';
+    d.onclick=function(){ toggleService(s.id, d); };
+    sg.appendChild(d);
+  });
+
+  renderMyBookings();
+}
+
+function toggleService(id, el){
+  var idx=bkState.services.indexOf(id);
+  if(idx===-1){ bkState.services.push(id); el.classList.add('selected'); }
+  else { bkState.services.splice(idx,1); el.classList.remove('selected'); }
+}
+
+function renderSlots(){
+  var dateVal=document.getElementById('bkDate').value;
+  if(!dateVal) return;
+  var booked=getBookings().filter(function(b){ return b.date===dateVal; }).map(function(b){return b.time;});
+  var sg=document.getElementById('slotsGrid');
+  sg.innerHTML='';
+  TIME_SLOTS.forEach(function(t){
+    var d=document.createElement('div');
+    d.className='slot'+(booked.indexOf(t)!==-1?' taken':'')+(bkState.slot===t?' selected':'');
+    d.textContent=t;
+    if(booked.indexOf(t)===-1){
+      d.onclick=function(){
+        document.querySelectorAll('.slot').forEach(function(s){s.classList.remove('selected');});
+        d.classList.add('selected');
+        bkState.slot=t;
+        document.getElementById('selectedTimeDisplay').textContent=t;
+        document.getElementById('selectedTimeDisplay').style.color='var(--accent)';
+      };
+    }
+    sg.appendChild(d);
+  });
+}
+
+function cNext(step){
+  if(step===1){
+    var ok=true;
+    function chk(id,cond){ var e=document.getElementById('err-'+id); var i=document.getElementById(id); if(cond){e.style.display='block';i.classList.add('error');ok=false;}else{e.style.display='none';i.classList.remove('error');} }
+    chk('bkPlate',  !document.getElementById('bkPlate').value.trim());
+    chk('bkCarType',!document.getElementById('bkCarType').value);
+    chk('bkBrand',  !document.getElementById('bkBrand').value.trim());
+    chk('bkModel',  !document.getElementById('bkModel').value.trim());
+    if(!ok) return;
+    showCStep(2);
+  } else if(step===2){
+    var ok2=true;
+    if(bkState.services.length===0){ document.getElementById('err-svc').style.display='block'; ok2=false; }
+    else { document.getElementById('err-svc').style.display='none'; }
+    var dateVal=document.getElementById('bkDate').value;
+    if(!dateVal){ document.getElementById('err-bkDate').style.display='block'; ok2=false; }
+    else { document.getElementById('err-bkDate').style.display='none'; }
+    if(!bkState.slot){ document.getElementById('err-slot').style.display='block'; ok2=false; }
+    else { document.getElementById('err-slot').style.display='none'; }
+    if(!ok2) return;
+    buildSummary();
+    showCStep(3);
+  }
+}
+function cBack(step){ showCStep(step-1); }  
+
+function showCStep(n){
+  [1,2,3].forEach(function(i){
+    document.getElementById('cStep'+i).style.display=(i===n?'block':'none');
+    var sc=document.getElementById('sc'+i);
+    sc.className='step-chip'+(i<n?' done':i===n?' active':'');
+  });
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function buildSummary(){
+  var svcs=bkState.services.map(function(id){return SERVICES.find(function(s){return s.id===id;});}).filter(Boolean);
+  var total=svcs.reduce(function(a,s){return a+s.price;},0);
+  var dateVal=document.getElementById('bkDate').value;
+  var dateStr=dateVal?new Date(dateVal+'T00:00:00').toLocaleDateString('en-MY',{weekday:'long',day:'numeric',month:'long',year:'numeric'}):'—';
+
+  document.getElementById('sum-plate').textContent=document.getElementById('bkPlate').value||'—';
+  document.getElementById('sum-type').textContent=document.getElementById('bkCarType').value||'—';
+  document.getElementById('sum-car').textContent=(document.getElementById('bkBrand').value+' '+document.getElementById('bkModel').value).trim()||'—';
+  var yr=document.getElementById('bkYear').value; var cl=document.getElementById('bkColor').value;
+  document.getElementById('sum-yearcolor').textContent=[yr,cl].filter(Boolean).join(' / ')||'—';
+  document.getElementById('sum-date').textContent=dateStr;
+  document.getElementById('sum-time').textContent=bkState.slot||'—';
+  document.getElementById('sum-price').textContent='RM '+total;
+  var svcHtml=svcs.map(function(s){return '<span class="svc-tag">'+s.icon+' '+s.name+' — RM '+s.price+'</span>';}).join('');
+  document.getElementById('sum-svcs').innerHTML=svcHtml||'—';
+}
+
+function submitBooking(){
+  var svcs=bkState.services.map(function(id){return SERVICES.find(function(s){return s.id===id;});}).filter(Boolean);
+  var total=svcs.reduce(function(a,s){return a+s.price;},0);
+  var dateVal=document.getElementById('bkDate').value;
+
+  var bookings=getBookings();
+  var newId='BK-'+String(bookings.length+1).padStart(4,'0');
+
+  var customers=getCustomers();
+  var me=customers.find(function(c){return c.email===user.id;});
+
+  bookings.push({
+    id:newId, status:'pending',
+    custName: user.name, custEmail: user.id,
+    custPhone: me?me.phone:'—',
+    plate:   document.getElementById('bkPlate').value.toUpperCase(),
+    carType: document.getElementById('bkCarType').value,
+    brand:   document.getElementById('bkBrand').value,
+    model:   document.getElementById('bkModel').value,
+    year:    document.getElementById('bkYear').value,
+    color:   document.getElementById('bkColor').value,
+    problem: document.getElementById('bkProblem').value,
+    services: bkState.services,
+    date:    dateVal, time: bkState.slot,
+    note:    document.getElementById('bkNote').value,
+    total:   total,
+    submittedAt: new Date().toISOString()
+  });
+  saveBookings(bookings);
+
+  document.getElementById('successRef').textContent=newId;
+  document.getElementById('successOverlay').classList.add('show');
+}
+
+function afterSuccess(){
+  document.getElementById('successOverlay').classList.remove('show');
+  // reset
+  bkState={services:[],slot:null};
+  document.querySelectorAll('.svc-chip').forEach(function(c){c.classList.remove('selected');});
+  document.querySelectorAll('.slot').forEach(function(s){s.classList.remove('selected');});
+  ['bkPlate','bkCarType','bkBrand','bkModel','bkYear','bkColor','bkProblem','bkDate','bkNote'].forEach(function(id){
+    var el=document.getElementById(id); if(el) el.value='';
+  });
+  document.getElementById('selectedTimeDisplay').textContent='Belum dipilih';
+  document.getElementById('selectedTimeDisplay').style.color='';
+  showCStep(1);
+  renderMyBookings();
+  window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'});
+}
+
+function renderMyBookings(){
+  var all=getBookings().filter(function(b){return b.custEmail===user.id;}).reverse();
+  var container=document.getElementById('myBookingsList');
+  document.getElementById('myBkCount').textContent=all.length?'('+all.length+')':'';
+
+  if(!all.length){
+    container.innerHTML='<div style="text-align:center;padding:32px;color:var(--muted);font-size:14px">Tiada tempahan lagi.</div>';
+    return;
+  }
+  container.innerHTML='';
+  all.forEach(function(b){
+    var svcNames=b.services.map(function(id){var s=SERVICES.find(function(x){return x.id===id;}); return s?s.name:'';}).filter(Boolean).join(', ');
+    var d=new Date(b.date+'T00:00:00'); var day=d.getDate(); var mon=d.toLocaleString('en-MY',{month:'short'}).toUpperCase();
+    var card=document.createElement('div');
+    card.className='booking-card-cust';
+    card.innerHTML=
+      '<div class="bk-date-box"><div class="bk-day">'+day+'</div><div class="bk-month">'+mon+'</div></div>'+
+      '<div class="bk-info">'+
+        '<div class="bk-title">'+b.plate+' — '+b.brand+' '+b.model+'</div>'+
+        '<div class="bk-meta">'+b.time+' &middot; '+svcNames+'</div>'+
+      '</div>'+
+      '<div>'+statusBadge(b.status)+'</div>'+
+      '<div style="font-family:\'Barlow Condensed\',sans-serif;font-size:18px;font-weight:700;color:var(--green)">RM '+b.total+'</div>';
+    container.appendChild(card);
+  });
+}
+
+// ══════════════════════════════════════
+// ADMIN / MECHANIC FLOW
+// ══════════════════════════════════════
+function setFilter(f, btn){
+  activeFilter=f;
+  document.querySelectorAll('.filter-btn').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  renderAdminList();
+}
+
+function renderAdminList(){
+  var all=getBookings();
+  var search=(document.getElementById('searchInput')||{}).value||'';
+  search=search.toLowerCase();
+
+  var filtered=all.filter(function(b){
+    var matchFilter=(activeFilter==='all')||b.status===activeFilter;
+    var svcNames=b.services.map(function(id){var s=SERVICES.find(function(x){return x.id===id;}); return s?s.name:'';}).join(' ');
+    var matchSearch=!search||(
+      b.custName.toLowerCase().includes(search)||
+      b.plate.toLowerCase().includes(search)||
+      svcNames.toLowerCase().includes(search)||
+      b.id.toLowerCase().includes(search)
+    );
+    return matchFilter&&matchSearch;
+  });
+
+  // Sort by date desc
+  filtered.sort(function(a,b){ return new Date(b.date+' '+b.time)-new Date(a.date+' '+a.time); });
+
+  document.getElementById('adminBkCount').textContent='('+filtered.length+')';
+  var container=document.getElementById('adminBookingList');
+  container.innerHTML='';
+
+  if(!filtered.length){
+    container.innerHTML='<div class="empty-state"><div class="empty-icon">📭</div><p>Tiada booking dijumpai.</p></div>';
+    return;
+  }
+
+  filtered.forEach(function(b, idx){
+    var svcNames=b.services.map(function(id){var s=SERVICES.find(function(x){return x.id===id;}); return s?s.name:'';}).filter(Boolean).join(', ');
+    var dateStr=new Date(b.date+'T00:00:00').toLocaleDateString('en-MY',{day:'numeric',month:'short',year:'numeric'});
+    var row=document.createElement('div');
+    row.className='bk-row'; row.style.animationDelay=(idx*.04)+'s';
+    row.innerHTML=
+      '<div class="bk-num">'+b.id+'</div>'+
+      '<div class="bk-main">'+
+        '<div class="bk-customer">'+b.custName+'</div>'+
+        '<div class="bk-details">'+b.plate+' &middot; '+b.brand+' '+b.model+'</div>'+
+      '</div>'+
+      '<div class="bk-svc" style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+svcNames+'</div>'+
+      '<div class="bk-datetime"><div class="bk-date-str">'+dateStr+'</div><div class="bk-time-str">'+b.time+'</div></div>'+
+      '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">'+statusBadge(b.status)+'<div class="bk-price-col">RM '+b.total+'</div></div>';
+    row.onclick=function(){ openModal(b); };
+    container.appendChild(row);
+  });
+}
+
+function updateAdminStats(){
+  var all=getBookings();
+  document.getElementById('aStat-total').textContent=all.length;
+  document.getElementById('aStat-pending').textContent=all.filter(function(b){return b.status==='pending';}).length;
+  document.getElementById('aStat-confirmed').textContent=all.filter(function(b){return b.status==='confirmed';}).length;
+  document.getElementById('aStat-done').textContent=all.filter(function(b){return b.status==='done';}).length;
+}
+
+// ── Modal ──────────────────────────────────────────────────
+function openModal(b){
+  currentModalBk=b;
+  var svcObjs=b.services.map(function(id){return SERVICES.find(function(s){return s.id===id;});}).filter(Boolean);
+  var dateStr=new Date(b.date+'T00:00:00').toLocaleDateString('en-MY',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+
+  document.getElementById('mRef').textContent='#'+b.id;
+  document.getElementById('mStatusBadge').innerHTML=statusBadge(b.status);
+  document.getElementById('m-custName').textContent=b.custName||'—';
+  document.getElementById('m-custPhone').textContent=b.custPhone||'—';
+  document.getElementById('m-custEmail').textContent=b.custEmail||'—';
+  document.getElementById('m-custId').textContent=b.id;
+  document.getElementById('m-plate').textContent=b.plate||'—';
+  document.getElementById('m-cartype').textContent=b.carType||'—';
+  document.getElementById('m-car').textContent=(b.brand+' '+b.model).trim()||'—';
+  document.getElementById('m-yearcolor').textContent=[b.year,b.color].filter(Boolean).join(' / ')||'—';
+  document.getElementById('m-problem').textContent=b.problem||'Tiada aduan khusus.';
+  document.getElementById('m-svcs').innerHTML=svcObjs.map(function(s){return '<span class="svc-tag">'+s.icon+' '+s.name+' — RM '+s.price+'</span>';}).join('');
+  document.getElementById('m-date').textContent=dateStr;
+  document.getElementById('m-time').textContent=b.time||'—';
+  document.getElementById('m-price').textContent='RM '+b.total;
+  document.getElementById('m-submitted').textContent=new Date(b.submittedAt).toLocaleString('en-MY');
+  document.getElementById('m-note').textContent=b.note||'Tiada nota.';
+
+  // Actions based on status
+  var actions=document.getElementById('modalActions');
+  actions.innerHTML='';
+  if(user.role==='admin'){
+    if(b.status==='pending'){
+      actions.innerHTML=
+        '<button class="btn btn-confirm" onclick="updateStatus(\'confirmed\')">✓ Confirm Booking</button>'+
+        '<button class="btn btn-reject"  onclick="updateStatus(\'cancelled\')">✕ Tolak</button>';
+    } else if(b.status==='confirmed'){
+      actions.innerHTML=
+        '<button class="btn btn-complete" onclick="updateStatus(\'done\')">✓ Mark Completed</button>'+
+        '<button class="btn btn-reject"   onclick="updateStatus(\'cancelled\')">✕ Batalkan</button>';
+    }
+  }
+  if(actions.innerHTML===''){
+    actions.innerHTML='<div style="font-size:13px;color:var(--muted);padding:0 0 4px">Tiada tindakan tersedia untuk status ini.</div>';
+  }
+
+  document.getElementById('detailModal').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+
+function closeModal(){
+  document.getElementById('detailModal').classList.remove('open');
+  document.body.style.overflow='';
+}
+
+function updateStatus(newStatus){
+  if(!currentModalBk) return;
+  var bookings=getBookings();
+  var idx=bookings.findIndex(function(b){return b.id===currentModalBk.id;});
+  if(idx!==-1){ bookings[idx].status=newStatus; saveBookings(bookings); }
+  closeModal();
+  renderAdminList();
+  updateAdminStats();
+}
+
+// Close modal on overlay click
+document.getElementById('detailModal').addEventListener('click', function(e){
+  if(e.target===this) closeModal();
+});
+
+// ── Status badge helper ────────────────────────────────────
+function statusBadge(s){
+  var map={pending:'badge-pending',confirmed:'badge-confirmed',inprogress:'badge-inprogress',done:'badge-done',cancelled:'badge-cancelled'};
+  var label={pending:'⏳ Pending',confirmed:'✅ Confirmed',inprogress:'🔧 In Progress',done:'🏁 Completed',cancelled:'✕ Cancelled'};
+  return '<span class="badge '+(map[s]||'badge-pending')+'">'+(label[s]||s)+'</span>';
+}
+
+// ── Seed demo bookings ─────────────────────────────────────
+function seedDemoBookings(){
+  var existing=getBookings();
+  if(existing.length>0) return; // already seeded
+  var demos=[
+    {id:'BK-0001',status:'pending',custName:'Ahmad bin Ali',custEmail:'ahmad@email.com',custPhone:'0123456789',plate:'WXY 1234',carType:'Sedan',brand:'Proton',model:'Saga',year:'2019',color:'Putih',problem:'Bunyi pelik dari enjin masa idle.',services:['oil','diag'],date:getFutureDate(1),time:'9:00 AM',note:'Tolong check betul-betul.',total:140,submittedAt:new Date().toISOString()},
+    {id:'BK-0002',status:'confirmed',custName:'Siti Nabilah',custEmail:'siti@email.com',custPhone:'0198765432',plate:'JHF 5678',carType:'Hatchback',brand:'Perodua',model:'Myvi',year:'2021',color:'Merah',problem:'AC rasa tak sejuk.',services:['ac','oil'],date:getFutureDate(1),time:'10:00 AM',note:'',total:230,submittedAt:new Date(Date.now()-3600000).toISOString()},
+    {id:'BK-0003',status:'done',custName:'Razif Hakim',custEmail:'razif@email.com',custPhone:'0112223344',plate:'KBM 9999',carType:'SUV / 4WD',brand:'Toyota',model:'Fortuner',year:'2022',color:'Hitam',problem:'',services:['full'],date:getFutureDate(-1),time:'2:00 PM',note:'',total:320,submittedAt:new Date(Date.now()-86400000).toISOString()},
+    {id:'BK-0004',status:'pending',custName:'Haslina Yusof',custEmail:'haslina@email.com',custPhone:'0134455667',plate:'PEQ 3344',carType:'MPV',brand:'Toyota',model:'Innova',year:'2020',color:'Kelabu',problem:'Brek terasa keras dan berbunyi.',services:['brake','align'],date:getFutureDate(2),time:'11:00 AM',note:'Anak-anak dalam kereta, please careful.',total:200,submittedAt:new Date(Date.now()-1800000).toISOString()},
+    {id:'BK-0005',status:'confirmed',custName:'Zulkifli Hamid',custEmail:'zul@email.com',custPhone:'0177889900',plate:'VHG 2211',carType:'Sedan',brand:'Honda',model:'City',year:'2018',color:'Biru',problem:'',services:['wash','tyre','bat'],date:getFutureDate(2),time:'3:00 PM',note:'',total:95,submittedAt:new Date(Date.now()-7200000).toISOString()},
+  ];
+  saveBookings(demos);
+}
+
+function getFutureDate(offset){
+  var d=new Date(); d.setDate(d.getDate()+offset);
+  return d.toISOString().split('T')[0];
+}
+</script>
+</body>
+</html>

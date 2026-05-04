@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Manage Services — AutoCare WMS</title>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg:#0d0f14; --surface:#161a23; --surface2:#1e2333; --surface3:#252b3b;
+      --accent:#e8a020; --accent2:#f0c060;
+      --red:#e84040; --blue:#4080e8; --green:#40c880; --purple:#a060e8; --orange:#f07040;
+      --text:#eef0f5; --muted:#7a8099; --border:rgba(255,255,255,0.07);
+    }
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden;}
+    body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(232,160,32,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(232,160,32,0.025) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0;}
+    body::after{content:'';position:fixed;top:-200px;left:50%;transform:translateX(-50%);width:600px;height:400px;background:radial-gradient(ellipse,rgba(232,160,32,0.1) 0%,transparent 70%);pointer-events:none;z-index:0;}
+
+    /* SIDEBAR */
+    .sidebar{position:fixed;left:0;top:0;bottom:0;width:220px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:10;}
+    .logo-area{padding:28px 24px 24px;border-bottom:1px solid var(--border);}
+    .logo-icon{width:40px;height:40px;background:var(--accent);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:12px;}
+    .logo-text{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;letter-spacing:.5px;line-height:1.1;}
+    .logo-text span{display:block;font-size:11px;font-weight:400;color:var(--muted);letter-spacing:1px;text-transform:uppercase;font-family:'DM Sans',sans-serif;margin-top:2px;}
+    .nav-section{flex:1;padding:20px 12px;overflow-y:auto;}
+    .nav-label{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);padding:0 12px;margin-bottom:8px;margin-top:16px;}
+    .nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;cursor:pointer;font-size:14px;color:var(--muted);transition:all .2s;text-decoration:none;position:relative;}
+    .nav-item:hover{background:var(--surface2);color:var(--text);}
+    .nav-item.active{background:rgba(240,192,96,0.12);color:var(--accent2);font-weight:500;}
+    .nav-item.active::before{content:'';position:absolute;left:0;top:8px;bottom:8px;width:3px;background:var(--accent2);border-radius:0 3px 3px 0;}
+    .nav-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+    .sidebar-footer{padding:16px 20px;border-top:1px solid var(--border);}
+    .user-card{display:flex;align-items:center;gap:10px;}
+    .avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--red));display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;flex-shrink:0;}
+    .user-info{flex:1;min-width:0;}
+    .user-name{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .user-role{font-size:11px;color:var(--muted);}
+    .logout-btn{cursor:pointer;color:var(--muted);font-size:18px;flex-shrink:0;transition:color .2s;background:none;border:none;padding:0;line-height:1;}
+    .logout-btn:hover{color:var(--red);}
+
+    /* MAIN */
+    .main{margin-left:220px;min-height:100vh;position:relative;z-index:1;}
+    .topbar{display:flex;align-items:center;justify-content:space-between;padding:20px 32px;border-bottom:1px solid var(--border);background:rgba(13,15,20,.85);backdrop-filter:blur(8px);position:sticky;top:0;z-index:5;}
+    .page-title{font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:700;}
+    .topbar-right{display:flex;align-items:center;gap:12px;}
+    .date-badge{font-size:12px;color:var(--muted);background:var(--surface2);padding:6px 14px;border-radius:20px;border:1px solid var(--border);}
+    .back-btn{display:flex;align-items:center;gap:6px;padding:7px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;font-size:13px;color:var(--muted);cursor:pointer;text-decoration:none;transition:.2s;}
+    .back-btn:hover{color:var(--text);background:var(--surface3);}
+    .btn{padding:10px 20px;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all .2s;font-family:'DM Sans',sans-serif;display:inline-flex;align-items:center;gap:7px;}
+    .btn-primary{background:var(--accent);color:#0d0f14;}
+    .btn-primary:hover{background:var(--accent2);transform:translateY(-1px);box-shadow:0 6px 20px rgba(232,160,32,.2);}
+    .btn-secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border);}
+    .btn-secondary:hover{background:var(--surface3);}
+    .btn-danger{background:rgba(232,64,64,.1);color:var(--red);border:1px solid rgba(232,64,64,.2);}
+    .btn-danger:hover{background:rgba(232,64,64,.18);}
+    .btn-sm{padding:7px 14px;font-size:12px;}
+
+    .content{padding:32px;}
+    .section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px;}
+    .section-title{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;}
+    .section-title span{color:var(--muted);font-size:14px;font-weight:400;margin-left:8px;font-family:'DM Sans',sans-serif;}
+
+    /* ═══════════════════════════════
+       CUSTOMER / GUEST VIEW
+    ═══════════════════════════════ */
+    .public-hero{background:linear-gradient(135deg,var(--surface2) 0%,rgba(240,192,96,.07) 100%);border:1px solid rgba(240,192,96,.18);border-radius:16px;padding:32px 36px;margin-bottom:36px;position:relative;overflow:hidden;animation:slideIn .5s ease;}
+    .public-hero::before{content:'🔧';position:absolute;right:32px;top:50%;transform:translateY(-50%);font-size:90px;opacity:.06;}
+    .public-hero h2{font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:800;margin-bottom:8px;}
+    .public-hero h2 span{color:var(--accent2);}
+    .public-hero p{color:var(--muted);font-size:14px;max-width:540px;line-height:1.6;}
+    .workshop-info{display:flex;align-items:center;gap:24px;margin-top:20px;flex-wrap:wrap;}
+    .winfo-chip{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);}
+    .winfo-chip strong{color:var(--text);}
+
+    /* Category tabs */
+    .cat-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:28px;}
+    .cat-tab{padding:8px 18px;border-radius:20px;font-size:13px;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--muted);transition:.2s;font-family:'DM Sans',sans-serif;}
+    .cat-tab:hover{color:var(--text);background:var(--surface3);}
+    .cat-tab.active{background:rgba(240,192,96,.12);color:var(--accent2);border-color:rgba(240,192,96,.3);}
+
+    /* Public service cards */
+    .pub-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;}
+    .pub-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;transition:all .25s;animation:fadeUp .4s ease both;}
+    .pub-card:hover{transform:translateY(-4px);border-color:rgba(240,192,96,.3);box-shadow:0 16px 48px rgba(0,0,0,.3);}
+    .pub-card-banner{height:6px;}
+    .pub-card-body{padding:22px;}
+    .pub-card-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:14px;}
+    .pub-card-name{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;margin-bottom:6px;}
+    .pub-card-cat{font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:10px;}
+    .pub-card-desc{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:16px;}
+    .pub-card-footer{display:flex;align-items:center;justify-content:space-between;padding-top:14px;border-top:1px solid var(--border);}
+    .pub-price{font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:700;color:var(--accent);}
+    .pub-price span{font-size:13px;font-weight:400;color:var(--muted);font-family:'DM Sans',sans-serif;}
+    .pub-duration{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:5px;}
+    .pub-badge{font-size:11px;padding:3px 10px;border-radius:20px;background:rgba(64,200,128,.1);color:var(--green);border:1px solid rgba(64,200,128,.2);}
+    .pub-badge.unavail{background:rgba(232,64,64,.08);color:var(--red);border-color:rgba(232,64,64,.15);}
+
+    /* Promo / info strip */
+    .info-strip{background:rgba(64,128,232,.06);border:1px solid rgba(64,128,232,.15);border-radius:12px;padding:14px 20px;display:flex;align-items:center;gap:14px;margin-bottom:28px;font-size:13px;color:var(--muted);}
+    .info-strip strong{color:var(--blue);}
+
+    /* ═══════════════════════════════
+       ADMIN VIEW
+    ═══════════════════════════════ */
+    .admin-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:28px;}
+    .astat{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px;position:relative;overflow:hidden;}
+    .astat::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:12px 12px 0 0;background:var(--c,var(--accent2));}
+    .astat-val{font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:700;color:var(--c,var(--accent2));line-height:1;margin-bottom:4px;}
+    .astat-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;}
+
+    /* Admin filter bar */
+    .filter-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+    .filter-btn{padding:7px 16px;border-radius:8px;font-size:13px;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--muted);transition:.2s;font-family:'DM Sans',sans-serif;}
+    .filter-btn:hover{color:var(--text);background:var(--surface3);}
+    .filter-btn.active{background:rgba(240,192,96,.1);color:var(--accent2);border-color:rgba(240,192,96,.3);}
+    .search-wrap{flex:1;min-width:180px;position:relative;}
+    .search-wrap input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:8px 14px 8px 36px;font-size:13px;color:var(--text);font-family:'DM Sans',sans-serif;outline:none;transition:.2s;}
+    .search-wrap input:focus{border-color:rgba(240,192,96,.4);}
+    .search-wrap input::placeholder{color:var(--muted);}
+    .search-icon{position:absolute;left:11px;top:50%;transform:translateY(-50%);font-size:14px;color:var(--muted);}
+
+    /* Admin table */
+    .svc-table{width:100%;border-collapse:collapse;}
+    .svc-table th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);padding:10px 16px;border-bottom:1px solid var(--border);white-space:nowrap;}
+    .svc-table td{padding:14px 16px;border-bottom:1px solid var(--border);font-size:14px;vertical-align:middle;}
+    .svc-table tr:last-child td{border-bottom:none;}
+    .svc-table tbody tr{transition:background .15s;cursor:pointer;}
+    .svc-table tbody tr:hover{background:rgba(255,255,255,.02);}
+    .table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;animation:fadeUp .4s ease both;}
+    .svc-icon-sm{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;}
+    .svc-name-col{display:flex;align-items:center;gap:12px;}
+    .price-col{font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;color:var(--accent);}
+    .avail-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:6px;}
+    .action-col{display:flex;gap:8px;}
+
+    /* Status badge */
+    .badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:500;}
+    .badge-avail{background:rgba(64,200,128,.1);color:var(--green);border:1px solid rgba(64,200,128,.2);}
+    .badge-unavail{background:rgba(232,64,64,.08);color:var(--red);border:1px solid rgba(232,64,64,.15);}
+
+    /* ── MODAL ── */
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);z-index:50;display:flex;align-items:center;justify-content:center;padding:24px;opacity:0;pointer-events:none;transition:opacity .3s;}
+    .modal-overlay.open{opacity:1;pointer-events:all;}
+    .modal{background:var(--surface);border:1px solid var(--border);border-radius:18px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;transform:translateY(20px) scale(.97);transition:transform .3s;box-shadow:0 32px 80px rgba(0,0,0,.5);}
+    .modal-overlay.open .modal{transform:translateY(0) scale(1);}
+    .modal-header{padding:24px 28px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--surface);z-index:2;}
+    .modal-title{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;}
+    .modal-title span{color:var(--accent2);}
+    .modal-close{width:32px;height:32px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--muted);transition:.2s;}
+    .modal-close:hover{background:var(--surface3);color:var(--text);}
+    .modal-body{padding:24px 28px;}
+    .modal-footer{padding:0 28px 24px;display:flex;gap:10px;}
+
+    .form-group{margin-bottom:18px;}
+    .form-label{display:block;font-size:11px;font-weight:500;color:var(--muted);margin-bottom:6px;letter-spacing:.5px;text-transform:uppercase;}
+    .form-label .req{color:var(--accent);}
+    .form-input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:11px 14px;font-size:14px;color:var(--text);font-family:'DM Sans',sans-serif;outline:none;transition:border-color .2s,box-shadow .2s;}
+    .form-input:focus{border-color:rgba(240,192,96,.5);box-shadow:0 0 0 3px rgba(240,192,96,.07);}
+    .form-input::placeholder{color:var(--muted);}
+    .form-input.error{border-color:rgba(232,64,64,.5);}
+    select.form-input{cursor:pointer;}
+    select.form-input option{background:var(--surface2);}
+    textarea.form-input{resize:vertical;min-height:80px;}
+    .form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+    .input-err{font-size:11px;color:var(--red);margin-top:5px;display:none;}
+
+    /* Icon picker */
+    .icon-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:8px;margin-top:6px;}
+    .icon-opt{width:38px;height:38px;border:1px solid var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer;background:var(--surface2);transition:.15s;}
+    .icon-opt:hover{border-color:rgba(240,192,96,.4);}
+    .icon-opt.selected{border-color:var(--accent2);background:rgba(240,192,96,.1);}
+
+    /* Delete confirm */
+    .del-modal .modal{max-width:420px;}
+    .del-modal .modal-body{text-align:center;padding:32px 28px 20px;}
+    .del-icon{font-size:48px;margin-bottom:16px;}
+    .del-title{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;margin-bottom:8px;}
+    .del-sub{font-size:14px;color:var(--muted);line-height:1.5;}
+
+    /* Empty */
+    .empty-state{text-align:center;padding:60px 20px;color:var(--muted);}
+    .empty-state .ei{font-size:48px;margin-bottom:16px;opacity:.35;}
+
+    /* Toast */
+    #toast{position:fixed;bottom:24px;right:24px;background:#1e2333;border:1px solid rgba(240,192,96,.3);padding:14px 20px;border-radius:10px;font-size:13px;font-weight:500;opacity:0;transform:translateY(10px);transition:all .3s;z-index:99;display:flex;align-items:center;gap:10px;pointer-events:none;max-width:320px;}
+
+    @keyframes slideIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+
+    @media(max-width:900px){
+      .pub-grid{grid-template-columns:repeat(2,1fr);}
+      .admin-stats{grid-template-columns:repeat(2,1fr);}
+    }
+  </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="logo-area">
+    <div class="logo-icon">🔧</div>
+    <div class="logo-text">AutoCare<span>Workshop Management</span></div>
+  </div>
+  <nav class="nav-section">
+    <div class="nav-label">Main</div>
+    <a class="nav-item" href="homepage.html"><div class="nav-dot" style="background:#7a8099"></div>Dashboard</a>
+    <div class="nav-label">Modules</div>
+    <a class="nav-item" href="booking.html"><div class="nav-dot" style="background:#e8a020"></div> Booking</a>
+    <a class="nav-item active" href="services.html"><div class="nav-dot" style="background:#f0c060"></div> Services</a>
+    <a class="nav-item" href="workorder.html"><div class="nav-dot" style="background:#4080e8"></div> Work Order</a>
+    <a class="nav-item" href="payment.html"><div class="nav-dot" style="background:#40c880"></div> Payment</a>
+    <a class="nav-item" href="inventory.html"><div class="nav-dot" style="background:#a060e8"></div> Inventory</a>
+    <div class="nav-label">System</div>
+    <a class="nav-item" href="reports.html"><div class="nav-dot" style="background:#7a8099"></div>Reports</a>
+    <a class="nav-item" href="settings.html"><div class="nav-dot" style="background:#7a8099"></div>Settings</a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="avatar" id="sidebarAvatar">A</div>
+      <div class="user-info">
+        <div class="user-name" id="sidebarName">Admin</div>
+        <div class="user-role" id="sidebarRole">Administrator</div>
+      </div>
+      <button class="logout-btn" onclick="logout()">⏻</button>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <div class="topbar">
+    <div class="page-title" id="pageTitle">Manage Services</div>
+    <div class="topbar-right">
+      <div class="date-badge" id="dateDisplay"></div>
+      <a href="homepage.html" class="back-btn">← Dashboard</a>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ═══════════════════════════════════
+         PUBLIC VIEW (Customer / Guest)
+    ═══════════════════════════════════ -->
+    <div id="publicView" style="display:none">
+      <div class="public-hero">
+        <h2>Provided<span> Services</span></h2>
+        <p>Check out the complete list of vehicle services available at AutoCare Workshop. Transparent pricing, guaranteed quality.</p>
+        <div class="workshop-info">
+          <div class="winfo-chip">📍 <strong>AutoCare Workshop</strong></div>
+          <div class="winfo-chip">⏰ Sunday–Thursday, <strong>8:30 AM – 6:00 PM</strong></div>
+          <div class="winfo-chip">📞 <strong>03-1234 5678</strong></div>
+        </div>
+      </div>
+
+      <div class="info-strip">
+        <span style="font-size:20px">💡</span>
+        <div>Prices are <strong>estimated starting from</strong> and may vary depending on the vehicle type & model. Contact us for an exact quotation.</div>
+      </div>
+
+
+      <!-- Category tabs -->
+      <div class="cat-tabs" id="pubCatTabs"></div>
+
+      <!-- Service cards -->
+      <div class="pub-grid" id="pubGrid"></div>
+    </div>
+
+    <!-- ═══════════════════════════════════
+         ADMIN VIEW
+    ═══════════════════════════════════ -->
+    <div id="adminView" style="display:none">
+
+      <!-- Stats -->
+      <div class="admin-stats">
+        <div class="astat" style="--c:var(--accent2)"><div class="astat-val" id="aStat-total">0</div><div class="astat-label">Total Servis</div></div>
+        <div class="astat" style="--c:var(--green)"><div class="astat-val" id="aStat-avail">0</div><div class="astat-label">Ready</div></div>
+        <div class="astat" style="--c:var(--red)"><div class="astat-val" id="aStat-unavail">0</div><div class="astat-label">Not available</div></div>
+        <div class="astat" style="--c:var(--blue)"><div class="astat-val" id="aStat-cats">0</div><div class="astat-label">Category</div></div>
+      </div>
+
+      <div class="section-header">
+        <div class="section-title">List of Services <span id="adminSvcCount"></span></div>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <div class="filter-bar">
+            <div class="search-wrap">
+              <span class="search-icon">🔍</span>
+              <input type="text" id="svcSearch" placeholder="Search name or category..." oninput="renderAdminTable()"/>
+            </div>
+            <button class="filter-btn active" onclick="setAdminFilter('all',this)">All</button>
+            <button class="filter-btn" onclick="setAdminFilter('available',this)">Active</button>
+            <button class="filter-btn" onclick="setAdminFilter('unavailable',this)">Not available</button>
+          </div>
+          <button class="btn btn-primary" onclick="openAddModal()">+ Add Service</button>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table class="svc-table">
+          <thead>
+            <tr>
+              <th>Service</th>
+              <th>Category</th>
+              <th>Price (RM)</th>
+              <th>Duration</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="adminTableBody"></tbody>
+        </table>
+        <div class="empty-state" id="adminEmpty" style="display:none">
+          <div class="ei">🔧</div>
+          <p>No service found.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<!-- ADD / EDIT MODAL -->
+<div class="modal-overlay" id="svcModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle">Add <span>New Service</span></div>
+      <div class="modal-close" onclick="closeModal()">✕</div>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editId"/>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Service Name <span class="req">*</span></label>
+          <input class="form-input" type="text" id="fName" placeholder="cth: Oil & Lubricants change"/>
+          <div class="input-err" id="err-fName">Please enter service name.</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Category <span class="req">*</span></label>
+          <select class="form-input" id="fCat">
+            <option value="">-- Choose category --</option>
+            <option>Oil & Lubricants</option>
+            <option>Brakes & Tires</option>
+            <option>Air Conditioning</option>
+            <option>Electrical & Battery</option>
+            <option>Full Service</option>
+            <option>Wash & Detailing</option>
+            <option>Diagnostics</option>
+            <option>Others</option>
+
+          </select>
+          <div class="input-err" id="err-fCat">Please choose category</div>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Starting price (RM) <span class="req">*</span></label>
+          <input class="form-input" type="number" id="fPrice" placeholder="80" min="0"/>
+          <div class="input-err" id="err-fPrice">Please enter price amount</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Estimated duration<span class="req">*</span></label>
+          <select class="form-input" id="fDuration">
+            <option value="">-- Choose --</option>
+            <option>30 minutes</option><option>45 minutes</option><option>1 hour</option>
+            <option>1.5 hours</option><option>2 hours</option><option>2.5 hours</option>
+            <option>3 hours</option><option>4 hours</option><option>Full day</option>
+          </select>
+          <div class="input-err" id="err-fDuration">Please choose</div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Explanation</label>
+        <textarea class="form-input" id="fDesc" placeholder="Briefly explain the service..."></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Icon</label>
+        <div class="icon-grid" id="iconGrid"></div>
+      </div>
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">Status</label>
+        <select class="form-input" id="fStatus">
+          <option value="available">✅ Ready</option>
+          <option value="unavailable">❌ Not ready</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" onclick="saveService()">Save</button>
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- DELETE CONFIRM MODAL -->
+<div class="modal-overlay del-modal" id="delModal">
+  <div class="modal">
+    <div class="modal-body">
+      <div class="del-icon">🗑️</div>
+      <div class="del-title">Delete service?</div>
+      <div class="del-sub" id="delSubText">This action cannot be undone.</div>
+    </div>
+    <div class="modal-footer" style="justify-content:center;gap:12px;padding-top:0">
+      <button class="btn btn-danger" onclick="confirmDelete()">Yes, delete</button>
+      <button class="btn btn-secondary" onclick="closeDelModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"><span id="toastIcon">✓</span><span id="toastMsg"></span></div>
+
+<script>
+// ── Session ────────────────────────────────────────────────
+var user={name:'Guest',role:'guest',id:'GUEST'};
+try{var raw=sessionStorage.getItem('wms_user');if(raw)user=JSON.parse(raw);}catch(e){}
+var roleLabels={admin:'Administrator',mechanic:'Mechanic',customer:'Customer',guest:'Guest'};
+document.getElementById('sidebarAvatar').textContent=user.name.charAt(0).toUpperCase();
+document.getElementById('sidebarName').textContent=user.name;
+document.getElementById('sidebarRole').textContent=roleLabels[user.role]||user.role;
+document.getElementById('dateDisplay').textContent=new Date().toLocaleDateString('en-MY',{weekday:'short',day:'numeric',month:'long',year:'numeric'});
+function logout(){sessionStorage.removeItem('wms_user');window.location.href='login.html';}
+
+// ── Storage ────────────────────────────────────────────────
+function getServices(){try{return JSON.parse(localStorage.getItem('wms_services')||'[]');}catch(e){return[];}}
+function saveServices(list){localStorage.setItem('wms_services',JSON.stringify(list));}
+
+// ── Default services seed ──────────────────────────────────
+var CAT_COLORS = {
+  'Oil & Lubricants': '#e8a020',
+  'Brakes & Tires': '#e84040',
+  'Air Conditioning': '#4080e8',
+  'Electrical & Battery': '#f0c060',
+  'Full Service': '#a060e8',
+  'Wash & Detailing': '#40c880',
+  'Diagnostics': '#4080e8',
+  'Others': '#7a8099'
+};
+
+// !! tukar semua icons jadi gambar guna link href
+var ICONS=['🛢️','🔄','🛑','❄️','🔋','🚿','⚙️','🏆','💻','🔦','🪛','🧰','🔩','💡','🧲','🛞','🚗','⛽','🔌','🧽'];
+var selectedIcon='🛢️';
+
+
+function seedServices(){
+  if(getServices().length > 0) return;
+
+  var seed = [
+    {id:'svc-001',name:'Engine Oil Change',cat:'Oil & Lubricants',icon:'🛢️',price:80,duration:'30 minutes',desc:'High-quality engine oil replacement. Includes oil filter replacement and basic fluid level checks.',status:'available'},
+    {id:'svc-002',name:'Gear Oil Change',cat:'Oil & Lubricants',icon:'🛢️',price:120,duration:'45 minutes',desc:'Automatic/manual transmission oil replacement for smoother and longer-lasting performance.',status:'available'},
+    {id:'svc-003',name:'Front Brake Service',cat:'Brakes & Tires',icon:'🛑',price:150,duration:'1.5 hours',desc:'Inspection and replacement of front brake pads. Includes brake disc and caliper check.',status:'available'},
+    {id:'svc-004',name:'Wheel Alignment & Balancing',cat:'Brakes & Tires',icon:'🛞',price:80,duration:'1 hour',desc:'Wheel angle adjustment to ensure even tire wear and accurate steering control.',status:'available'},
+    {id:'svc-005',name:'Car AC Service',cat:'Air Conditioning',icon:'❄️',price:150,duration:'1.5 hours',desc:'Evaporator cleaning, refrigerant gas check, and cabin filter replacement for optimal cooling.',status:'available'},
+    {id:'svc-006',name:'AC Gas Top Up',cat:'Air Conditioning',icon:'💨',price:80,duration:'45 minutes',desc:'Refilling R134a or R1234yf gas for improved air conditioning performance.',status:'available'},
+    {id:'svc-007',name:'Battery Check & Replacement',cat:'Electrical & Battery',icon:'🔋',price:30,duration:'30 minutes',desc:'Battery voltage and capacity testing. Replacement available with selected brands.',status:'available'},
+    {id:'svc-008',name:'Full Service',cat:'Full Service',icon:'🏆',price:320,duration:'3 hours',desc:'Complete service package: oil change, brake check, tires, electrical system, fluids, and 30+ inspection points.',status:'available'},
+    {id:'svc-009',name:'Minor Service',cat:'Full Service',icon:'🔧',price:180,duration:'1.5 hours',desc:'Basic service including oil change, air filter, oil filter, spark plugs, and general vehicle inspection.',status:'available'},
+    {id:'svc-010',name:'Basic Car Wash',cat:'Wash & Detailing',icon:'🚿',price:25,duration:'30 minutes',desc:'Exterior wash using special soap and appropriate water pressure to protect vehicle paint.',status:'available'},
+    {id:'svc-011',name:'Full Detailing',cat:'Wash & Detailing',icon:'✨',price:280,duration:'Full day',desc:'Polishing, waxing, engine bay cleaning, deep interior cleaning, and leather treatment for a like-new finish.',status:'available'},
+    {id:'svc-012',name:'Computer Diagnosis',cat:'Diagnostics',icon:'💻',price:60,duration:'1 hour',desc:'Comprehensive OBD scan to identify error codes, sensor issues, and engine control system faults.',status:'available'},
+  ];
+
+  saveServices(seed);
+}
+
+// ── INIT ───────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded',function(){
+  seedServices();
+  if(user.role==='admin'){
+    document.getElementById('adminView').style.display='block';
+    document.getElementById('pageTitle').textContent='Manage Services';
+    buildIconGrid();
+    renderAdminTable();
+    updateAdminStats();
+  } else {
+    document.getElementById('publicView').style.display='block';
+    document.getElementById('pageTitle').textContent='Our Service';
+    renderPublicView();
+  }
+});
+
+// ══════════════════════════════════════
+// PUBLIC VIEW
+// ══════════════════════════════════════
+var pubActivecat='all';
+function renderPublicView(){
+  var svcs=getServices().filter(function(s){return s.status==='available';});
+  var cats=[...new Set(svcs.map(function(s){return s.cat;}))];
+
+  // Build tabs
+  var tabsEl=document.getElementById('pubCatTabs');
+  tabsEl.innerHTML='<div class="cat-tab active" onclick="setPubCat(\'all\',this)">All ('+svcs.length+')</div>';
+  cats.forEach(function(c){
+    var cnt=svcs.filter(function(s){return s.cat===c;}).length;
+    tabsEl.innerHTML+='<div class="cat-tab" onclick="setPubCat(\''+c+'\',this)">'+c+' ('+cnt+')</div>';
+  });
+
+  renderPubCards();
+}
+
+function setPubCat(cat,el){
+  pubActivecat=cat;
+  document.querySelectorAll('.cat-tab').forEach(function(t){t.classList.remove('active');});
+  el.classList.add('active');
+  renderPubCards();
+}
+
+function renderPubCards(){
+  var svcs=getServices().filter(function(s){return s.status==='available';});
+  if(pubActivecat!=='all') svcs=svcs.filter(function(s){return s.cat===pubActivecat;});
+  var grid=document.getElementById('pubGrid');
+  grid.innerHTML='';
+  if(!svcs.length){
+    grid.innerHTML='<div class="empty-state" style="grid-column:1/-1"><div class="ei">🔧</div><p>No service in this category.</p></div>';
+    return;
+  }
+  svcs.forEach(function(s,i){
+    var color=CAT_COLORS[s.cat]||'#e8a020';
+    var card=document.createElement('div');
+    card.className='pub-card'; card.style.animationDelay=(i*.06)+'s';
+    card.innerHTML=
+      '<div class="pub-card-banner" style="background:'+color+'"></div>'+
+      '<div class="pub-card-body">'+
+        '<div class="pub-card-icon" style="background:'+color+'22">'+s.icon+'</div>'+
+        '<div class="pub-card-cat">'+s.cat+'</div>'+
+        '<div class="pub-card-name">'+s.name+'</div>'+
+        '<div class="pub-card-desc">'+(s.desc||'Quality service by experienced mechanics.')+'</div>'+
+        '<div class="pub-card-footer">'+
+          '<div><div class="pub-price">RM '+s.price+'<span> / starting</span></div></div>'+
+          '<div style="text-align:right">'+
+            '<div class="pub-duration">⏱ '+s.duration+'</div>'+
+            '<div style="margin-top:6px"><span class="pub-badge">✓ Ready</span></div>'+
+          '</div>'+
+        '</div>'+
+      '</div>';
+    grid.appendChild(card);
+  });
+}
+
+// ══════════════════════════════════════
+// ADMIN VIEW
+// ══════════════════════════════════════
+var adminFilter='all';
+function setAdminFilter(f,btn){
+  adminFilter=f;
+  document.querySelectorAll('.filter-btn').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  renderAdminTable();
+}
+
+function renderAdminTable(){
+  var all=getServices();
+  var q=(document.getElementById('svcSearch').value||'').toLowerCase();
+  var filtered=all.filter(function(s){
+    var matchF=adminFilter==='all'||(adminFilter==='available'&&s.status==='available')||(adminFilter==='unavailable'&&s.status==='unavailable');
+    var matchQ=!q||(s.name.toLowerCase().includes(q)||s.cat.toLowerCase().includes(q));
+    return matchF&&matchQ;
+  });
+  document.getElementById('adminSvcCount').textContent='('+filtered.length+')';
+  var tbody=document.getElementById('adminTableBody');
+  var empty=document.getElementById('adminEmpty');
+  tbody.innerHTML='';
+  if(!filtered.length){empty.style.display='block';return;}
+  empty.style.display='none';
+  var color=CAT_COLORS;
+  filtered.forEach(function(s,i){
+    var c=color[s.cat]||'#7a8099';
+    var tr=document.createElement('tr');
+    tr.style.animationDelay=(i*.03)+'s';
+    tr.innerHTML=
+      '<td><div class="svc-name-col"><div class="svc-icon-sm" style="background:'+c+'22">'+s.icon+'</div><div><div style="font-weight:600">'+s.name+'</div><div style="font-size:11px;color:var(--muted);margin-top:2px">#'+s.id+'</div></div></div></td>'+
+      '<td><span style="font-size:12px;background:'+c+'15;color:'+c+';padding:3px 10px;border-radius:20px;border:1px solid '+c+'30">'+s.cat+'</span></td>'+
+      '<td><span class="price-col">'+s.price+'</span></td>'+
+      '<td style="color:var(--muted);font-size:13px">'+s.duration+'</td>'+
+      '<td>'+(s.status==='available'?'<span class="badge badge-avail">✓ Aktif</span>':'<span class="badge badge-unavail">✕ Tidak Aktif</span>')+'</td>'+
+      '<td><div class="action-col">'+
+        '<button class="btn btn-secondary btn-sm" onclick="openEditModal(\''+s.id+'\');event.stopPropagation()">✏️ Edit</button>'+
+        '<button class="btn btn-danger btn-sm" onclick="openDelModal(\''+s.id+'\');event.stopPropagation()">🗑️</button>'+
+      '</div></td>';
+    tbody.appendChild(tr);
+  });
+}
+
+function updateAdminStats(){
+  var all=getServices();
+  document.getElementById('aStat-total').textContent=all.length;
+  document.getElementById('aStat-avail').textContent=all.filter(function(s){return s.status==='available';}).length;
+  document.getElementById('aStat-unavail').textContent=all.filter(function(s){return s.status==='unavailable';}).length;
+  var cats=[...new Set(all.map(function(s){return s.cat;}))].length;
+  document.getElementById('aStat-cats').textContent=cats;
+}
+
+// ── Icon picker ────────────────────────────────────────────
+function buildIconGrid(){
+  var grid=document.getElementById('iconGrid');
+  ICONS.forEach(function(ic){
+    var d=document.createElement('div');
+    d.className='icon-opt'+(ic===selectedIcon?' selected':'');
+    d.textContent=ic;
+    d.onclick=function(){
+      selectedIcon=ic;
+      document.querySelectorAll('.icon-opt').forEach(function(x){x.classList.remove('selected');});
+      d.classList.add('selected');
+    };
+    grid.appendChild(d);
+  });
+}
+
+// ── Add Modal ──────────────────────────────────────────────
+function openAddModal(){
+  document.getElementById('editId').value='';
+  document.getElementById('modalTitle').innerHTML='Add <span>New Service</span>';
+  clearForm();
+  document.getElementById('svcModal').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+
+function openEditModal(id){
+  var s=getServices().find(function(x){return x.id===id;});
+  if(!s)return;
+  document.getElementById('editId').value=id;
+  document.getElementById('modalTitle').innerHTML='Edit <span>Servis</span>';
+  document.getElementById('fName').value=s.name;
+  document.getElementById('fCat').value=s.cat;
+  document.getElementById('fPrice').value=s.price;
+  document.getElementById('fDuration').value=s.duration;
+  document.getElementById('fDesc').value=s.desc||'';
+  document.getElementById('fStatus').value=s.status;
+  selectedIcon=s.icon;
+  document.querySelectorAll('.icon-opt').forEach(function(x){
+    x.classList.toggle('selected',x.textContent===s.icon);
+  });
+  document.getElementById('svcModal').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+
+function closeModal(){
+  document.getElementById('svcModal').classList.remove('open');
+  document.body.style.overflow='';
+}
+
+function clearForm(){
+  ['fName','fCat','fPrice','fDuration','fDesc'].forEach(function(id){
+    var el=document.getElementById(id);if(el)el.value='';
+  });
+  document.getElementById('fStatus').value='available';
+  selectedIcon='🛢️';
+  document.querySelectorAll('.icon-opt').forEach(function(x){x.classList.toggle('selected',x.textContent==='🛢️');});
+  document.querySelectorAll('.input-err').forEach(function(e){e.style.display='none';});
+  document.querySelectorAll('.form-input.error').forEach(function(e){e.classList.remove('error');});
+}
+
+function saveService(){
+  var ok=true;
+  function chk(id,cond){
+    var err=document.getElementById('err-'+id);
+    var inp=document.getElementById(id);
+    if(cond){err.style.display='block';inp.classList.add('error');ok=false;}
+    else{err.style.display='none';inp.classList.remove('error');}
+  }
+  chk('fName',!document.getElementById('fName').value.trim());
+  chk('fCat',!document.getElementById('fCat').value);
+  chk('fPrice',!document.getElementById('fPrice').value||isNaN(document.getElementById('fPrice').value));
+  chk('fDuration',!document.getElementById('fDuration').value);
+  if(!ok)return;
+
+  var svcs=getServices();
+  var editId=document.getElementById('editId').value;
+  var data={
+    name:document.getElementById('fName').value.trim(),
+    cat:document.getElementById('fCat').value,
+    icon:selectedIcon,
+    price:parseFloat(document.getElementById('fPrice').value),
+    duration:document.getElementById('fDuration').value,
+    desc:document.getElementById('fDesc').value.trim(),
+    status:document.getElementById('fStatus').value
+  };
+
+  if(editId){
+    var idx=svcs.findIndex(function(s){return s.id===editId;});
+    if(idx!==-1){svcs[idx]=Object.assign(svcs[idx],data);}
+    showToast('✓','Service successfully updated!');
+  } else {
+    data.id='svc-'+String(svcs.length+1).padStart(3,'0');
+    svcs.push(data);
+    showToast('✓','Service has been added!');
+  }
+  saveServices(svcs);
+  closeModal();
+  renderAdminTable();
+  updateAdminStats();
+}
+
+// ── Delete ─────────────────────────────────────────────────
+var pendingDelId=null;
+function openDelModal(id){
+  pendingDelId=id;
+  var s=getServices().find(function(x){return x.id===id;});
+  document.getElementById('delSubText').textContent='You are about to delete the service "' + (s ? s.name : id) + '". This action cannot be undone.';
+  document.getElementById('delModal').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closeDelModal(){
+  document.getElementById('delModal').classList.remove('open');
+  document.body.style.overflow='';
+  pendingDelId=null;
+}
+function confirmDelete(){
+  if(!pendingDelId)return;
+  var svcs=getServices().filter(function(s){return s.id!==pendingDelId;});
+  saveServices(svcs);
+  closeDelModal();
+  renderAdminTable();
+  updateAdminStats();
+  showToast('🗑️','Service successfully deleted.');
+}
+
+// Close modal on overlay click
+['svcModal','delModal'].forEach(function(id){
+  document.getElementById(id).addEventListener('click',function(e){if(e.target===this)closeModal(),closeDelModal();});
+});
+
+// ── Toast ──────────────────────────────────────────────────
+var toastTimer;
+function showToast(icon,msg){
+  clearTimeout(toastTimer);
+  var el=document.getElementById('toast');
+  document.getElementById('toastIcon').textContent=icon;
+  document.getElementById('toastMsg').textContent=msg;
+  el.style.opacity='1';el.style.transform='translateY(0)';
+  toastTimer=setTimeout(function(){el.style.opacity='0';el.style.transform='translateY(10px)';},2800);
+}
+</script>
+</body>
+</html>

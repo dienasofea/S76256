@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Manage Work Order — AutoCare WMS</title>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    :root{
+      --bg:#0d0f14; --surface:#161a23; --surface2:#1e2333; --surface3:#252b3b;
+      --accent:#e8a020; --accent2:#f0c060;
+      --red:#e84040; --blue:#4080e8; --green:#40c880; --purple:#a060e8; --orange:#f07040;
+      --text:#eef0f5; --muted:#7a8099; --border:rgba(255,255,255,0.07);
+    }
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden;}
+    body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(64,128,232,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(64,128,232,0.025) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0;}
+    body::after{content:'';position:fixed;top:-200px;left:50%;transform:translateX(-50%);width:600px;height:400px;background:radial-gradient(ellipse,rgba(64,128,232,0.1) 0%,transparent 70%);pointer-events:none;z-index:0;}
+
+    /* SIDEBAR */
+    .sidebar{position:fixed;left:0;top:0;bottom:0;width:220px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:10;}
+    .logo-area{padding:28px 24px 24px;border-bottom:1px solid var(--border);}
+    .logo-icon{width:40px;height:40px;background:var(--accent);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:12px;}
+    .logo-text{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;letter-spacing:.5px;line-height:1.1;}
+    .logo-text span{display:block;font-size:11px;font-weight:400;color:var(--muted);letter-spacing:1px;text-transform:uppercase;font-family:'DM Sans',sans-serif;margin-top:2px;}
+    .nav-section{flex:1;padding:20px 12px;overflow-y:auto;}
+    .nav-label{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);padding:0 12px;margin-bottom:8px;margin-top:16px;}
+    .nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;cursor:pointer;font-size:14px;color:var(--muted);transition:all .2s;text-decoration:none;position:relative;}
+    .nav-item:hover{background:var(--surface2);color:var(--text);}
+    .nav-item.active{background:rgba(64,128,232,0.12);color:var(--blue);font-weight:500;}
+    .nav-item.active::before{content:'';position:absolute;left:0;top:8px;bottom:8px;width:3px;background:var(--blue);border-radius:0 3px 3px 0;}
+    .nav-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+    .sidebar-footer{padding:16px 20px;border-top:1px solid var(--border);}
+    .user-card{display:flex;align-items:center;gap:10px;}
+    .avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--red));display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;flex-shrink:0;}
+    .user-info{flex:1;min-width:0;}
+    .user-name{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .user-role{font-size:11px;color:var(--muted);}
+    .logout-btn{cursor:pointer;color:var(--muted);font-size:18px;flex-shrink:0;transition:color .2s;background:none;border:none;padding:0;line-height:1;}
+    .logout-btn:hover{color:var(--red);}
+
+    /* MAIN */
+    .main{margin-left:220px;min-height:100vh;position:relative;z-index:1;}
+    .topbar{display:flex;align-items:center;justify-content:space-between;padding:20px 32px;border-bottom:1px solid var(--border);background:rgba(13,15,20,.85);backdrop-filter:blur(8px);position:sticky;top:0;z-index:5;}
+    .page-title{font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:700;}
+    .topbar-right{display:flex;align-items:center;gap:12px;}
+    .date-badge{font-size:12px;color:var(--muted);background:var(--surface2);padding:6px 14px;border-radius:20px;border:1px solid var(--border);}
+    .back-btn{display:flex;align-items:center;gap:6px;padding:7px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;font-size:13px;color:var(--muted);cursor:pointer;text-decoration:none;transition:.2s;}
+    .back-btn:hover{color:var(--text);background:var(--surface3);}
+    .btn{padding:10px 20px;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all .2s;font-family:'DM Sans',sans-serif;display:inline-flex;align-items:center;gap:7px;}
+    .btn-primary{background:var(--blue);color:#fff;}
+    .btn-primary:hover{background:#5090f0;transform:translateY(-1px);box-shadow:0 6px 20px rgba(64,128,232,.25);}
+    .btn-secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border);}
+    .btn-secondary:hover{background:var(--surface3);}
+    .btn-danger{background:rgba(232,64,64,.1);color:var(--red);border:1px solid rgba(232,64,64,.2);}
+    .btn-danger:hover{background:rgba(232,64,64,.18);}
+    .btn-sm{padding:7px 14px;font-size:12px;}
+    .btn-green{background:rgba(64,200,128,.1);color:var(--green);border:1px solid rgba(64,200,128,.2);}
+    .btn-green:hover{background:rgba(64,200,128,.18);}
+
+    .content{padding:32px;}
+
+    /* STATS */
+    .wo-stats{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:28px;}
+    .wstat{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px;position:relative;overflow:hidden;}
+    .wstat::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:12px 12px 0 0;background:var(--c,var(--blue));}
+    .wstat-val{font-family:'Barlow Condensed',sans-serif;font-size:30px;font-weight:700;color:var(--c,var(--blue));line-height:1;margin-bottom:4px;}
+    .wstat-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;}
+
+    /* SECTION HEADER */
+    .section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px;}
+    .section-title{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;}
+    .section-title span{color:var(--muted);font-size:14px;font-weight:400;margin-left:8px;font-family:'DM Sans',sans-serif;}
+
+    /* FILTER BAR */
+    .filter-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+    .filter-btn{padding:7px 16px;border-radius:8px;font-size:13px;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--muted);transition:.2s;font-family:'DM Sans',sans-serif;}
+    .filter-btn:hover{color:var(--text);background:var(--surface3);}
+    .filter-btn.active{background:rgba(64,128,232,.1);color:var(--blue);border-color:rgba(64,128,232,.3);}
+    .search-wrap{flex:1;min-width:200px;position:relative;}
+    .search-wrap input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:8px 14px 8px 36px;font-size:13px;color:var(--text);font-family:'DM Sans',sans-serif;outline:none;transition:.2s;}
+    .search-wrap input:focus{border-color:rgba(64,128,232,.4);}
+    .search-wrap input::placeholder{color:var(--muted);}
+    .search-icon{position:absolute;left:11px;top:50%;transform:translateY(-50%);font-size:14px;color:var(--muted);}
+
+    /* WORK ORDER CARDS */
+    .wo-grid{display:flex;flex-direction:column;gap:12px;}
+    .wo-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;cursor:pointer;transition:all .22s;animation:fadeUp .35s ease both;}
+    .wo-card:hover{border-color:rgba(64,128,232,.3);transform:translateX(3px);box-shadow:0 8px 32px rgba(0,0,0,.2);}
+    .wo-card-inner{display:grid;grid-template-columns:5px 1fr;align-items:stretch;}
+    .wo-stripe{width:5px;flex-shrink:0;}
+    .wo-body{padding:18px 20px;display:grid;grid-template-columns:100px 1fr auto auto auto;align-items:center;gap:16px;}
+    .wo-id{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:var(--muted);}
+    .wo-id b{display:block;font-size:12px;color:var(--blue);margin-top:2px;}
+    .wo-main{}
+    .wo-title{font-size:14px;font-weight:600;margin-bottom:4px;}
+    .wo-meta{font-size:12px;color:var(--muted);}
+    .wo-svc-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px;}
+    .wo-svc-tag{font-size:11px;background:rgba(64,128,232,.08);color:var(--blue);border:1px solid rgba(64,128,232,.15);padding:2px 8px;border-radius:20px;}
+    .wo-date{text-align:right;}
+    .wo-date-str{font-size:13px;font-weight:600;}
+    .wo-date-sub{font-size:11px;color:var(--muted);margin-top:2px;}
+    .wo-mechanic{text-align:right;font-size:12px;color:var(--muted);}
+    .wo-mech-name{font-size:13px;font-weight:500;color:var(--text);}
+    .wo-actions{display:flex;flex-direction:column;gap:6px;align-items:flex-end;}
+
+    /* Progress bar inside card */
+    .wo-progress{padding:0 20px 14px;}
+    .progress-track{height:4px;background:var(--surface2);border-radius:4px;overflow:hidden;}
+    .progress-fill{height:100%;border-radius:4px;transition:width .5s ease;}
+    .progress-labels{display:flex;justify-content:space-between;margin-top:6px;}
+    .progress-label{font-size:10px;color:var(--muted);}
+    .progress-label.active-lbl{color:var(--blue);font-weight:600;}
+
+    /* Status badges */
+    .badge{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:500;}
+    .st-pending   {background:rgba(232,160,32,.12);color:var(--accent);}
+    .st-received  {background:rgba(64,128,232,.12);color:var(--blue);}
+    .st-diagnosing{background:rgba(160,96,232,.12);color:var(--purple);}
+    .st-repairing {background:rgba(240,112,64,.12);color:var(--orange);}
+    .st-qc        {background:rgba(64,200,128,.1);color:var(--green);}
+    .st-done      {background:rgba(64,200,128,.15);color:var(--green);}
+    .st-cancelled {background:rgba(232,64,64,.1);color:var(--red);}
+
+    /* ── MODAL ── */
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);z-index:50;display:flex;align-items:center;justify-content:center;padding:24px;opacity:0;pointer-events:none;transition:opacity .3s;}
+    .modal-overlay.open{opacity:1;pointer-events:all;}
+    .modal{background:var(--surface);border:1px solid var(--border);border-radius:18px;width:100%;max-width:640px;max-height:90vh;overflow-y:auto;transform:translateY(20px) scale(.97);transition:transform .3s;box-shadow:0 32px 80px rgba(0,0,0,.5);}
+    .modal-overlay.open .modal{transform:translateY(0) scale(1);}
+    .modal-header{padding:24px 28px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--surface);z-index:2;}
+    .modal-title{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;}
+    .modal-title span{color:var(--blue);}
+    .modal-close{width:32px;height:32px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--muted);transition:.2s;}
+    .modal-close:hover{background:var(--surface3);color:var(--text);}
+    .modal-body{padding:24px 28px;}
+    .modal-footer{padding:0 28px 24px;display:flex;gap:10px;flex-wrap:wrap;}
+
+    .detail-section{margin-bottom:22px;}
+    .detail-section-title{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border);}
+    .detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+    .detail-key{font-size:11px;color:var(--muted);margin-bottom:3px;text-transform:uppercase;letter-spacing:.4px;}
+    .detail-val{font-size:14px;font-weight:500;}
+
+    /* Status stepper in modal */
+    .status-stepper{display:flex;align-items:center;gap:0;margin:12px 0;}
+    .step-node{display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;}
+    .step-circle{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;border:2px solid var(--border);background:var(--surface2);color:var(--muted);transition:.2s;}
+    .step-circle.done{background:var(--green);border-color:var(--green);color:#fff;}
+    .step-circle.current{background:var(--blue);border-color:var(--blue);color:#fff;}
+    .step-lbl{font-size:10px;color:var(--muted);text-align:center;white-space:nowrap;}
+    .step-lbl.current{color:var(--blue);font-weight:600;}
+    .step-connector{flex:1;height:2px;background:var(--border);margin-bottom:18px;transition:.2s;}
+    .step-connector.done{background:var(--green);}
+
+    /* Form */
+    .form-group{margin-bottom:16px;}
+    .form-label{display:block;font-size:11px;font-weight:500;color:var(--muted);margin-bottom:6px;letter-spacing:.5px;text-transform:uppercase;}
+    .form-label .req{color:var(--blue);}
+    .form-input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:11px 14px;font-size:14px;color:var(--text);font-family:'DM Sans',sans-serif;outline:none;transition:border-color .2s,box-shadow .2s;}
+    .form-input:focus{border-color:rgba(64,128,232,.5);box-shadow:0 0 0 3px rgba(64,128,232,.07);}
+    .form-input::placeholder{color:var(--muted);}
+    .form-input.error{border-color:rgba(232,64,64,.5);}
+    select.form-input{cursor:pointer;}
+    select.form-input option{background:var(--surface2);}
+    textarea.form-input{resize:vertical;min-height:90px;}
+    .form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+    .input-err{font-size:11px;color:var(--red);margin-top:5px;display:none;}
+
+    /* Notes timeline */
+    .notes-timeline{display:flex;flex-direction:column;gap:0;}
+    .note-entry{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);position:relative;}
+    .note-entry:last-child{border-bottom:none;}
+    .note-dot{width:10px;height:10px;border-radius:50%;background:var(--blue);flex-shrink:0;margin-top:4px;}
+    .note-content{}
+    .note-text{font-size:13px;line-height:1.5;margin-bottom:4px;}
+    .note-meta{font-size:11px;color:var(--muted);}
+    .add-note-box{background:var(--surface2);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-top:10px;}
+    .add-note-box textarea{width:100%;background:transparent;border:none;padding:12px 14px;font-size:13px;color:var(--text);font-family:'DM Sans',sans-serif;outline:none;resize:none;min-height:70px;}
+    .add-note-box textarea::placeholder{color:var(--muted);}
+    .add-note-footer{padding:8px 12px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;}
+
+    /* Empty */
+    .empty-state{text-align:center;padding:60px 20px;color:var(--muted);}
+    .empty-state .ei{font-size:48px;margin-bottom:16px;opacity:.35;}
+
+    /* Access denied */
+    .access-denied{text-align:center;padding:80px 32px;}
+    .access-denied .ad-icon{font-size:64px;margin-bottom:20px;opacity:.4;}
+    .access-denied h2{font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:800;margin-bottom:10px;}
+    .access-denied p{color:var(--muted);font-size:14px;margin-bottom:24px;}
+
+    /* Toast */
+    #toast{position:fixed;bottom:24px;right:24px;background:#1e2333;border:1px solid rgba(64,128,232,.3);padding:14px 20px;border-radius:10px;font-size:13px;font-weight:500;opacity:0;transform:translateY(10px);transition:all .3s;z-index:99;display:flex;align-items:center;gap:10px;pointer-events:none;max-width:320px;}
+
+    @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes slideIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+
+    @media(max-width:960px){
+      .wo-body{grid-template-columns:80px 1fr auto;}
+      .wo-mechanic,.wo-actions{display:none;}
+      .wo-stats{grid-template-columns:repeat(3,1fr);}
+    }
+  </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="logo-area">
+    <div class="logo-icon">🔧</div>
+    <div class="logo-text">AutoCare<span>Workshop Management</span></div>
+  </div>
+  <nav class="nav-section">
+    <div class="nav-label">Main</div>
+    <a class="nav-item" href="homepage.html"><div class="nav-dot" style="background:#7a8099"></div>Dashboard</a>
+    <div class="nav-label">Modules</div>
+    <a class="nav-item" href="booking.html"><div class="nav-dot" style="background:#e8a020"></div>Manage Booking</a>
+    <a class="nav-item" href="services.html"><div class="nav-dot" style="background:#f0c060"></div>Manage Services</a>
+    <a class="nav-item active" href="workorder.html"><div class="nav-dot" style="background:#4080e8"></div>Manage Work Order</a>
+    <a class="nav-item" href="payment.html"><div class="nav-dot" style="background:#40c880"></div>Manage Payment</a>
+    <a class="nav-item" href="inventory.html"><div class="nav-dot" style="background:#a060e8"></div>Manage Inventory</a>
+    <div class="nav-label">System</div>
+    <a class="nav-item" href="reports.html"><div class="nav-dot" style="background:#7a8099"></div>Reports</a>
+    <a class="nav-item" href="settings.html"><div class="nav-dot" style="background:#7a8099"></div>Settings</a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="avatar" id="sidebarAvatar">A</div>
+      <div class="user-info">
+        <div class="user-name" id="sidebarName">Admin</div>
+        <div class="user-role" id="sidebarRole">Administrator</div>
+      </div>
+      <button class="logout-btn" onclick="logout()">⏻</button>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <div class="topbar">
+    <div class="page-title">Manage Work Order</div>
+    <div class="topbar-right">
+      <div class="date-badge" id="dateDisplay"></div>
+      <a href="homepage.html" class="back-btn">← Dashboard</a>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ACCESS DENIED (customer/guest) -->
+    <div id="accessDenied" style="display:none">
+      <div class="access-denied">
+        <div class="ad-icon">🔒</div>
+        <h2>Akses Terhad</h2>
+        <p>Modul Work Order hanya boleh diakses oleh Admin dan Mekanik sahaja.</p>
+        <a href="homepage.html" class="btn btn-secondary">← Kembali ke Dashboard</a>
+      </div>
+    </div>
+
+    <!-- MAIN CONTENT (admin/mechanic) -->
+    <div id="mainContent" style="display:none">
+
+      <!-- Stats -->
+      <div class="wo-stats">
+        <div class="wstat" style="--c:var(--blue)"><div class="wstat-val" id="wStat-total">0</div><div class="wstat-label">Total WO</div></div>
+        <div class="wstat" style="--c:var(--accent)"><div class="wstat-val" id="wStat-pending">0</div><div class="wstat-label">Pending</div></div>
+        <div class="wstat" style="--c:var(--orange)"><div class="wstat-val" id="wStat-active">0</div><div class="wstat-label">Active</div></div>
+        <div class="wstat" style="--c:var(--green)"><div class="wstat-val" id="wStat-done">0</div><div class="wstat-label">Done</div></div>
+        <div class="wstat" style="--c:var(--red)"><div class="wstat-val" id="wStat-cancel">0</div><div class="wstat-label">Cancelled</div></div>
+      </div>
+
+      <!-- Header + Filters -->
+      <div class="section-header">
+        <div class="section-title">List Work Order <span id="woCount"></span></div>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <div class="filter-bar">
+            <div class="search-wrap">
+              <span class="search-icon">🔍</span>
+              <input type="text" id="woSearch" placeholder="Cari WO ID, booking, pelanggan..." oninput="renderWOList()"/>
+            </div>
+            <button class="filter-btn active" onclick="setWOFilter('all',this)">All</button>
+            <button class="filter-btn" onclick="setWOFilter('pending',this)">Pending</button>
+            <button class="filter-btn" onclick="setWOFilter('active',this)">Active</button>
+            <button class="filter-btn" onclick="setWOFilter('done',this)">Done</button>
+          </div>
+          <button class="btn btn-primary" id="addWOBtn" onclick="openCreateModal()" style="display:none">+ Do Work Done</button>
+        </div>
+      </div>
+
+      <!-- WO List -->
+      <div class="wo-grid" id="woGrid"></div>
+
+    </div>
+  </div>
+</main>
+
+<!-- ═══════════════ CREATE / EDIT MODAL ═══════════════ -->
+<div class="modal-overlay" id="woModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="woModalTitle">Do <span>Work Order</span></div>
+      <div class="modal-close" onclick="closeWOModal()">✕</div>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="woEditId"/>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Booking ID <span class="req">*</span></label>
+          <select class="form-input" id="woBkId">
+            <option value="">-- Pilih Booking --</option>
+          </select>
+          <div class="input-err" id="err-woBkId">Choose booking</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Status Servis <span class="req">*</span></label>
+          <select class="form-input" id="woStatus">
+            <option value="pending">⏳ Pending — Not started yet</option>
+            <option value="received">🔑 Received — Vehicle received</option>
+            <option value="diagnosing">🔍 Diagnosing — Under inspection</option>
+            <option value="repairing">🔧 Repairing — Under repair</option>
+            <option value="qc">✅ QC Check — Quality check</option>
+            <option value="done">🏁 Done — Done</option>
+            <option value="cancelled">✕ Cancelled — cancelled</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Assign Mechanic</label>
+          <select class="form-input" id="woMechanic">
+            <option value="">-- Choose mechanic --</option>
+            <option>Azrul bin Hamid</option>
+            <option>Faizal Norzain</option>
+            <option>Rizwan Alias</option>
+            <option>Hafiz Othman</option>
+            <option>Syafiq Rahman</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Starting date <span class="req">*</span></label>
+          <input class="form-input" type="date" id="woDateCreated"/>
+          <div class="input-err" id="err-woDateCreated">Choose date</div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Work note</label>
+        <textarea class="form-input" id="woNote" placeholder="Nota untuk mekanik, arahan khas, atau pemerhatian awal..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" onclick="saveWO()">Save Work Order</button>
+      <button class="btn btn-secondary" onclick="closeWOModal()">Cancelled</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ DETAIL MODAL ═══════════════ -->
+<div class="modal-overlay" id="detailModal">
+  <div class="modal" style="max-width:680px">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">Work Order <span id="dm-id">#WO-0001</span></div>
+        <div id="dm-badge" style="margin-top:6px"></div>
+      </div>
+      <div class="modal-close" onclick="closeDetailModal()">✕</div>
+    </div>
+    <div class="modal-body">
+
+      <!-- Status stepper -->
+      <div class="detail-section">
+        <div class="detail-section-title">⚙️ Service status</div>
+        <div class="status-stepper" id="dm-stepper"></div>
+      </div>
+
+      <!-- Info grid -->
+      <div class="detail-section">
+        <div class="detail-section-title">📋 Work Order information</div>
+        <div class="detail-grid">
+          <div><div class="detail-key">Work Order ID</div><div class="detail-val" id="dm-woid">—</div></div>
+          <div><div class="detail-key">Booking ID</div><div class="detail-val" id="dm-bkid">—</div></div>
+          <div><div class="detail-key">Date created</div><div class="detail-val" id="dm-created">—</div></div>
+          <div><div class="detail-key">Mechanic</div><div class="detail-val" id="dm-mech">—</div></div>
+        </div>
+      </div>
+
+      <!-- Booking info -->
+      <div class="detail-section">
+        <div class="detail-section-title">🚗 Vehicle and Mechanic Information</div>
+        <div class="detail-grid">
+          <div><div class="detail-key">Customer</div><div class="detail-val" id="dm-cust">—</div></div>
+          <div><div class="detail-key">No.Plat</div><div class="detail-val" id="dm-plate">—</div></div>
+          <div><div class="detail-key">Vehicle</div><div class="detail-val" id="dm-car">—</div></div>
+          <div><div class="detail-key">Booking date</div><div class="detail-val" id="dm-bkdate">—</div></div>
+        </div>
+        <div style="margin-top:12px">
+          <div class="detail-key" style="margin-bottom:6px">Service Requested</div>
+          <div id="dm-svcs"></div>
+        </div>
+        <div style="margin-top:12px">
+          <div class="detail-key" style="margin-bottom:6px">Problem / Customer Complaint</div>
+          <div style="font-size:13px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);line-height:1.5" id="dm-problem">—</div>
+        </div>
+      </div>
+
+      <!-- Notes timeline -->
+      <div class="detail-section">
+        <div class="detail-section-title">📝 Note & Work Log </div>
+        <div class="notes-timeline" id="dm-notes"></div>
+        <div class="add-note-box" id="addNoteBox">
+          <textarea id="newNoteInput" placeholder="Add new note (e.g.: Replace front brake pads, rear tires OK)"></textarea>
+          <div class="add-note-footer">
+            <button class="btn btn-primary btn-sm" onclick="addNote()">+ Add Nota</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <div class="modal-footer" id="detailActions"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"><span id="toastIcon">✓</span><span id="toastMsg"></span></div>
+
+<script>
+// ── Session ────────────────────────────────────────────────
+var user={name:'Guest',role:'guest',id:'GUEST'};
+try{var raw=sessionStorage.getItem('wms_user');if(raw)user=JSON.parse(raw);}catch(e){}
+var roleLabels={admin:'Administrator',mechanic:'Mechanic',customer:'Customer',guest:'Guest'};
+document.getElementById('sidebarAvatar').textContent=user.name.charAt(0).toUpperCase();
+document.getElementById('sidebarName').textContent=user.name;
+document.getElementById('sidebarRole').textContent=roleLabels[user.role]||user.role;
+document.getElementById('dateDisplay').textContent=new Date().toLocaleDateString('en-MY',{weekday:'short',day:'numeric',month:'long',year:'numeric'});
+function logout(){sessionStorage.removeItem('wms_user');window.location.href='login.html';}
+
+// ── Storage ────────────────────────────────────────────────
+function getWOs(){try{return JSON.parse(localStorage.getItem('wms_workorders')||'[]');}catch(e){return[];}}
+function saveWOs(list){localStorage.setItem('wms_workorders',JSON.stringify(list));}
+function getBookings(){try{return JSON.parse(localStorage.getItem('wms_bookings')||'[]');}catch(e){return[];}}
+
+// ── Status config ──────────────────────────────────────────
+var STATUS_CONFIG={
+  pending:   {label:'⏳ Pending',     cls:'st-pending',  stripe:'#e8a020', progress:0},
+  received:  {label:'🔑 Received',    cls:'st-received', stripe:'#4080e8', progress:20},
+  diagnosing:{label:'🔍 Diagnosing',  cls:'st-diagnosing',stripe:'#a060e8',progress:40},
+  repairing: {label:'🔧 Repairing',   cls:'st-repairing',stripe:'#f07040', progress:65},
+  qc:        {label:'✅ QC Check',    cls:'st-qc',       stripe:'#40c880', progress:85},
+  done:      {label:'🏁 Done',     cls:'st-done',     stripe:'#40c880', progress:100},
+  cancelled: {label:'✕ Cancelled',  cls:'st-cancelled',stripe:'#e84040', progress:0},
+};
+var STATUS_FLOW=['pending','received','diagnosing','repairing','qc','done'];
+var SERVICES_MASTER=[
+  {id:'oil',name:'Oil & Lubricants'},{id:'tyre',name:'Check Tyre'},{id:'brake',name:'Service brake'},
+  {id:'ac',name:'Service AC'},{id:'bat',name:'Check battery'},{id:'wash',name:'Wash Car'},
+  {id:'align',name:'Wheel Alignment'},{id:'full',name:'Full Service'},{id:'diag',name:'Computer Diagnosis'},
+];
+
+// ── Seed demo WOs ──────────────────────────────────────────
+function seedWOs(){
+  if(getWOs().length>0)return;
+  var bookings=getBookings();
+  if(!bookings.length)return;
+  var demos=[
+    {id:'WO-0001',bookingId:bookings[0]?bookings[0].id:'BK-0001',status:'repairing',mechanic:'Azrul bin Hamid',dateCreated:new Date().toISOString().split('T')[0],notes:[{text:'Vehicle received. Oil level is low, needs to be changed immediately.',by:'Azrul bin Hamid',at:new Date(Date.now()-3600000*3).toISOString()},{text:'Oil replacement completed. Spark plugs were also replaced.',by:'Azrul bin Hamid',at:new Date(Date.now()-3600000).toISOString()}],createdAt:new Date().toISOString()},
+    {id:'WO-0002',bookingId:bookings[1]?bookings[1].id:'BK-0002',status:'diagnosing',mechanic:'Faizal Norzain',dateCreated:new Date().toISOString().split('T')[0],notes:[{text:'Customer complains the AC is not cold. Currently checking gas level.',by:'Faizal Norzain',at:new Date(Date.now()-1800000).toISOString()}],createdAt:new Date().toISOString()},
+    {id:'WO-0003',bookingId:bookings[2]?bookings[2].id:'BK-0003',status:'done',mechanic:'Rizwan Alias',dateCreated:getFutureDate(-1),notes:[{text:'Full service done.All inspection points are OK',by:'Rizwan Alias',at:new Date(Date.now()-86400000).toISOString()}],createdAt:new Date(Date.now()-86400000).toISOString()},
+    {id:'WO-0004',bookingId:bookings[3]?bookings[3].id:'BK-0004',status:'pending',mechanic:'',dateCreated:getFutureDate(2),notes:[],createdAt:new Date().toISOString()},
+  ];
+  saveWOs(demos);
+}
+
+function getFutureDate(offset){var d=new Date();d.setDate(d.getDate()+offset);return d.toISOString().split('T')[0];}
+
+// ── INIT ───────────────────────────────────────────────────
+var woFilter='all';
+var currentWO=null;
+
+window.addEventListener('DOMContentLoaded',function(){
+  seedWOs();
+  if(user.role==='customer'||user.role==='guest'){
+    document.getElementById('accessDenied').style.display='block';
+  } else {
+    document.getElementById('mainContent').style.display='block';
+    if(user.role==='admin') document.getElementById('addWOBtn').style.display='flex';
+    renderWOList();
+    updateWOStats();
+  }
+});
+
+// ══════════════════════════════════════
+// LIST
+// ══════════════════════════════════════
+function setWOFilter(f,btn){
+  woFilter=f;
+  document.querySelectorAll('.filter-btn').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  renderWOList();
+}
+
+var ACTIVE_STATUSES=['received','diagnosing','repairing','qc'];
+
+function renderWOList(){
+  var all=getWOs();
+  var q=(document.getElementById('woSearch').value||'').toLowerCase();
+
+  var filtered=all.filter(function(wo){
+    var matchF=woFilter==='all'||
+      (woFilter==='pending'&&wo.status==='pending')||
+      (woFilter==='active'&&ACTIVE_STATUSES.includes(wo.status))||
+      (woFilter==='done'&&(wo.status==='done'||wo.status==='cancelled'));
+    var matchQ=!q||(wo.id.toLowerCase().includes(q)||wo.bookingId.toLowerCase().includes(q)||(wo.mechanic||'').toLowerCase().includes(q));
+    // Also match by customer name via booking
+    if(q&&!matchQ){
+      var bk=getBookings().find(function(b){return b.id===wo.bookingId;});
+      if(bk&&(bk.custName.toLowerCase().includes(q)||bk.plate.toLowerCase().includes(q))) matchQ=true;
+    }
+    return matchF&&matchQ;
+  });
+
+  // Sort by createdAt desc
+  filtered.sort(function(a,b){return new Date(b.createdAt)-new Date(a.createdAt);});
+
+  document.getElementById('woCount').textContent='('+filtered.length+')';
+  var grid=document.getElementById('woGrid');
+  grid.innerHTML='';
+
+  if(!filtered.length){
+    grid.innerHTML='<div class="empty-state"><div class="ei">🔩</div><p>No work order found.</p></div>';
+    return;
+  }
+
+  filtered.forEach(function(wo,idx){
+    var cfg=STATUS_CONFIG[wo.status]||STATUS_CONFIG.pending;
+    var bk=getBookings().find(function(b){return b.id===wo.bookingId;})||{};
+    var svcNames=(bk.services||[]).map(function(id){var s=SERVICES_MASTER.find(function(x){return x.id===id;});return s?s.name:'';}).filter(Boolean);
+    var progPct=cfg.progress;
+
+    var card=document.createElement('div');
+    card.className='wo-card'; card.style.animationDelay=(idx*.04)+'s';
+    card.onclick=function(){openDetailModal(wo.id);};
+
+    var svcTagsHtml=svcNames.slice(0,3).map(function(n){return '<span class="wo-svc-tag">'+n+'</span>';}).join('');
+    if(svcNames.length>3) svcTagsHtml+='<span class="wo-svc-tag">+'+( svcNames.length-3)+' lagi</span>';
+
+    var dateStr=wo.dateCreated?new Date(wo.dateCreated+'T00:00:00').toLocaleDateString('en-MY',{day:'numeric',month:'short',year:'numeric'}):'—';
+    var createdStr=wo.createdAt?new Date(wo.createdAt).toLocaleDateString('en-MY',{day:'numeric',month:'short'}):'—';
+
+    card.innerHTML=
+      '<div class="wo-card-inner">'+
+        '<div class="wo-stripe" style="background:'+cfg.stripe+'"></div>'+
+        '<div>'+
+          '<div class="wo-body">'+
+            '<div class="wo-id">'+wo.id+'<b>'+wo.bookingId+'</b></div>'+
+            '<div class="wo-main">'+
+              '<div class="wo-title">'+(bk.custName||'—')+' — '+(bk.plate||'—')+'</div>'+
+              '<div class="wo-meta">'+(bk.brand||'')+' '+(bk.model||'')+'</div>'+
+              '<div class="wo-svc-tags">'+svcTagsHtml+'</div>'+
+            '</div>'+
+            '<div class="wo-mechanic">'+
+              '<div style="font-size:11px;color:var(--muted);margin-bottom:2px">Mechanic</div>'+
+              '<div class="wo-mech-name">'+(wo.mechanic||'<span style="color:var(--muted)">Note assign yet</span>')+'</div>'+
+            '</div>'+
+            '<div class="wo-date">'+
+              '<div class="wo-date-str">Start: '+dateStr+'</div>'+
+              '<div class="wo-date-sub">Created: '+createdStr+'</div>'+
+            '</div>'+
+            '<div class="wo-actions">'+
+              '<span class="badge '+cfg.cls+'">'+cfg.label+'</span>'+
+              (user.role==='admin'?'<button class="btn btn-secondary btn-sm" onclick="openEditWO(\''+wo.id+'\');event.stopPropagation()">✏️ Edit</button>':'')+
+            '</div>'+
+          '</div>'+
+          (wo.status!=='cancelled'&&wo.status!=='done'?
+            '<div class="wo-progress">'+
+              '<div class="progress-track"><div class="progress-fill" style="width:'+progPct+'%;background:'+cfg.stripe+'"></div></div>'+
+              '<div class="progress-labels">'+
+                STATUS_FLOW.map(function(s){
+                  var c2=STATUS_CONFIG[s];
+                  var idx2=STATUS_FLOW.indexOf(s);
+                  var cur=STATUS_FLOW.indexOf(wo.status);
+                  return '<div class="progress-label'+(s===wo.status?' active-lbl':'')+'">'+c2.label.split(' ')[0]+'</div>';
+                }).join('')+
+              '</div>'+
+            '</div>'
+          :'')+
+        '</div>'+
+      '</div>';
+    grid.appendChild(card);
+  });
+}
+
+function updateWOStats(){
+  var all=getWOs();
+  document.getElementById('wStat-total').textContent=all.length;
+  document.getElementById('wStat-pending').textContent=all.filter(function(w){return w.status==='pending';}).length;
+  document.getElementById('wStat-active').textContent=all.filter(function(w){return ACTIVE_STATUSES.includes(w.status);}).length;
+  document.getElementById('wStat-done').textContent=all.filter(function(w){return w.status==='done';}).length;
+  document.getElementById('wStat-cancel').textContent=all.filter(function(w){return w.status==='cancelled';}).length;
+}
+
+// ══════════════════════════════════════
+// CREATE / EDIT MODAL
+// ══════════════════════════════════════
+function openCreateModal(){
+  document.getElementById('woEditId').value='';
+  document.getElementById('woModalTitle').innerHTML='Buat <span>Work Order</span>';
+  clearWOForm();
+  populateBookingDropdown(null);
+  document.getElementById('woDateCreated').value=new Date().toISOString().split('T')[0];
+  document.getElementById('woModal').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+
+function openEditWO(id){
+  var wo=getWOs().find(function(w){return w.id===id;});
+  if(!wo)return;
+  document.getElementById('woEditId').value=id;
+  document.getElementById('woModalTitle').innerHTML='Edit <span>Work Order</span>';
+  populateBookingDropdown(wo.bookingId);
+  document.getElementById('woBkId').value=wo.bookingId;
+  document.getElementById('woStatus').value=wo.status;
+  document.getElementById('woMechanic').value=wo.mechanic||'';
+  document.getElementById('woDateCreated').value=wo.dateCreated||'';
+  document.getElementById('woNote').value=(wo.notes&&wo.notes.length?wo.notes[wo.notes.length-1].text:'');
+  document.getElementById('woModal').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+
+function closeWOModal(){
+  document.getElementById('woModal').classList.remove('open');
+  document.body.style.overflow='';
+}
+
+function clearWOForm(){
+  ['woBkId','woStatus','woMechanic','woNote'].forEach(function(id){
+    var el=document.getElementById(id);if(el)el.value='';
+  });
+  document.getElementById('woStatus').value='pending';
+  document.querySelectorAll('.input-err').forEach(function(e){e.style.display='none';});
+}
+
+function populateBookingDropdown(selectedId){
+  var sel=document.getElementById('woBkId');
+  // Keep only confirmed bookings without a WO (or the current one)
+  var bookings=getBookings().filter(function(b){return b.status==='confirmed'||b.status==='pending';});
+  var existingWOs=getWOs();
+  var usedBkIds=existingWOs.map(function(w){return w.bookingId;});
+
+  sel.innerHTML='<option value="">-- Choose Booking --</option>';
+  bookings.forEach(function(b){
+    if(usedBkIds.includes(b.id)&&b.id!==selectedId)return; // skip already used
+    var opt=document.createElement('option');
+    opt.value=b.id;
+    opt.textContent=b.id+' — '+b.custName+' ('+b.plate+')';
+    if(b.id===selectedId) opt.selected=true;
+    sel.appendChild(opt);
+  });
+  // Also add all bookings if none available (fallback)
+  if(sel.options.length<=1){
+    getBookings().forEach(function(b){
+      var opt=document.createElement('option');
+      opt.value=b.id;
+      opt.textContent=b.id+' — '+b.custName+' ('+b.plate+')';
+      if(b.id===selectedId) opt.selected=true;
+      sel.appendChild(opt);
+    });
+  }
+}
+
+function saveWO(){
+  var ok=true;
+  function chk(id,cond){
+    var err=document.getElementById('err-'+id);
+    var inp=document.getElementById(id);
+    if(cond){if(err)err.style.display='block';if(inp)inp.classList.add('error');ok=false;}
+    else{if(err)err.style.display='none';if(inp)inp.classList.remove('error');}
+  }
+  chk('woBkId',!document.getElementById('woBkId').value);
+  chk('woDateCreated',!document.getElementById('woDateCreated').value);
+  if(!ok)return;
+
+  var wos=getWOs();
+  var editId=document.getElementById('woEditId').value;
+  var noteText=document.getElementById('woNote').value.trim();
+
+  if(editId){
+    var idx=wos.findIndex(function(w){return w.id===editId;});
+    if(idx!==-1){
+      wos[idx].bookingId=document.getElementById('woBkId').value;
+      wos[idx].status=document.getElementById('woStatus').value;
+      wos[idx].mechanic=document.getElementById('woMechanic').value;
+      wos[idx].dateCreated=document.getElementById('woDateCreated').value;
+      if(noteText){
+        wos[idx].notes=wos[idx].notes||[];
+        wos[idx].notes.push({text:noteText,by:user.name,at:new Date().toISOString()});
+      }
+    }
+    showToast('✓','Work Order succesfully updated!');
+  } else {
+    var newId='WO-'+String(wos.length+1).padStart(4,'0');
+    var newWO={
+      id:newId,
+      bookingId:document.getElementById('woBkId').value,
+      status:document.getElementById('woStatus').value,
+      mechanic:document.getElementById('woMechanic').value,
+      dateCreated:document.getElementById('woDateCreated').value,
+      notes:noteText?[{text:noteText,by:user.name,at:new Date().toISOString()}]:[],
+      createdAt:new Date().toISOString()
+    };
+    wos.push(newWO);
+    showToast('✓','Work Order '+newId+' succesfully done!');
+  }
+  saveWOs(wos);
+  closeWOModal();
+  renderWOList();
+  updateWOStats();
+}
+
+// ══════════════════════════════════════
+// DETAIL MODAL
+// ══════════════════════════════════════
+function openDetailModal(id){
+  var wo=getWOs().find(function(w){return w.id===id;});
+  if(!wo)return;
+  currentWO=wo;
+  var bk=getBookings().find(function(b){return b.id===wo.bookingId;})||{};
+  var cfg=STATUS_CONFIG[wo.status]||STATUS_CONFIG.pending;
+
+  document.getElementById('dm-id').textContent='#'+wo.id;
+  document.getElementById('dm-badge').innerHTML='<span class="badge '+cfg.cls+'">'+cfg.label+'</span>';
+  document.getElementById('dm-woid').textContent=wo.id;
+  document.getElementById('dm-bkid').textContent=wo.bookingId||'—';
+  document.getElementById('dm-created').textContent=wo.dateCreated?new Date(wo.dateCreated+'T00:00:00').toLocaleDateString('en-MY',{day:'numeric',month:'long',year:'numeric'}):'—';
+  document.getElementById('dm-mech').textContent=wo.mechanic||'Belum assign';
+  document.getElementById('dm-cust').textContent=bk.custName||'—';
+  document.getElementById('dm-plate').textContent=bk.plate||'—';
+  document.getElementById('dm-car').textContent=(bk.brand||'')+' '+(bk.model||'')||'—';
+  document.getElementById('dm-bkdate').textContent=bk.date?new Date(bk.date+'T00:00:00').toLocaleDateString('en-MY',{day:'numeric',month:'short',year:'numeric'}):'—';
+
+  // Services
+  var svcObjs=(bk.services||[]).map(function(id){return SERVICES_MASTER.find(function(s){return s.id===id;});}).filter(Boolean);
+  document.getElementById('dm-svcs').innerHTML=svcObjs.length?svcObjs.map(function(s){return '<span style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;background:rgba(64,128,232,.08);border:1px solid rgba(64,128,232,.15);border-radius:20px;font-size:12px;color:var(--blue);margin:2px">'+s.name+'</span>';}).join(''):'<span style="color:var(--muted);font-size:13px">Tiada servis dicatat</span>';
+
+  // Problem
+  document.getElementById('dm-problem').textContent=bk.problem||'No complaints.';
+
+  // Stepper
+  buildStepper(wo.status);
+
+  // Notes
+  renderNotes(wo.notes||[]);
+
+  // Show/hide add note box for mechanic/admin
+  document.getElementById('addNoteBox').style.display=(user.role==='admin'||user.role==='mechanic')?'block':'none';
+  document.getElementById('newNoteInput').value='';
+
+  // Action buttons
+  var actions=document.getElementById('detailActions');
+  actions.innerHTML='';
+  if((user.role==='admin'||user.role==='mechanic')&&wo.status!=='done'&&wo.status!=='cancelled'){
+    var curIdx=STATUS_FLOW.indexOf(wo.status);
+    if(curIdx!==-1&&curIdx<STATUS_FLOW.length-1){
+      var nextStatus=STATUS_FLOW[curIdx+1];
+      var nextCfg=STATUS_CONFIG[nextStatus];
+      actions.innerHTML+='<button class="btn btn-green" onclick="advanceStatus(\''+nextStatus+'\')">'+nextCfg.label+' →</button>';
+    }
+    if(user.role==='admin'){
+      actions.innerHTML+='<button class="btn btn-secondary" onclick="openEditWO(\''+wo.id+'\');closeDetailModal()">✏️ Edit WO</button>';
+      actions.innerHTML+='<button class="btn btn-danger" onclick="cancelWO(\''+wo.id+'\')">✕ Cancelled</button>';
+    }
+  }
+  if(!actions.innerHTML){
+    actions.innerHTML='<div style="font-size:13px;color:var(--muted);padding:0 0 4px">No action taken for this status.</div>';
+  }
+
+  document.getElementById('detailModal').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+
+function closeDetailModal(){
+  document.getElementById('detailModal').classList.remove('open');
+  document.body.style.overflow='';
+  currentWO=null;
+}
+
+function buildStepper(currentStatus){
+  var el=document.getElementById('dm-stepper');
+  el.innerHTML='';
+  var curIdx=STATUS_FLOW.indexOf(currentStatus);
+  STATUS_FLOW.forEach(function(s,i){
+    var cfg=STATUS_CONFIG[s];
+    var isDone=i<curIdx;
+    var isCur=i===curIdx;
+    var emoji=cfg.label.split(' ')[0];
+    var node=document.createElement('div');node.className='step-node';
+    node.innerHTML='<div class="step-circle'+(isDone?' done':isCur?' current':'')+'">'+emoji+'</div><div class="step-lbl'+(isCur?' current':'')+'">'+cfg.label.split(' ').slice(1).join(' ')+'</div>';
+    el.appendChild(node);
+    if(i<STATUS_FLOW.length-1){
+      var conn=document.createElement('div');conn.className='step-connector'+(isDone?' done':'');
+      el.appendChild(conn);
+    }
+  });
+}
+
+function renderNotes(notes){
+  var el=document.getElementById('dm-notes');
+  if(!notes.length){
+    el.innerHTML='<div style="font-size:13px;color:var(--muted);padding:8px 0">No note.</div>';
+    return;
+  }
+  el.innerHTML='';
+  notes.slice().reverse().forEach(function(n){
+    var div=document.createElement('div');div.className='note-entry';
+    var timeStr=new Date(n.at).toLocaleString('en-MY',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+    div.innerHTML='<div class="note-dot"></div><div class="note-content"><div class="note-text">'+n.text+'</div><div class="note-meta">'+n.by+' &middot; '+timeStr+'</div></div>';
+    el.appendChild(div);
+  });
+}
+
+function addNote(){
+  if(!currentWO)return;
+  var text=document.getElementById('newNoteInput').value.trim();
+  if(!text){showToast('⚠️','Note cannot empty');return;}
+  var wos=getWOs();
+  var idx=wos.findIndex(function(w){return w.id===currentWO.id;});
+  if(idx===-1)return;
+  wos[idx].notes=wos[idx].notes||[];
+  wos[idx].notes.push({text:text,by:user.name,at:new Date().toISOString()});
+  saveWOs(wos);
+  currentWO=wos[idx];
+  renderNotes(wos[idx].notes);
+  document.getElementById('newNoteInput').value='';
+  showToast('✓','Note succesfully added.');
+}
+
+function advanceStatus(newStatus){
+  if(!currentWO)return;
+  var wos=getWOs();
+  var idx=wos.findIndex(function(w){return w.id===currentWO.id;});
+  if(idx===-1)return;
+  var cfg=STATUS_CONFIG[newStatus];
+  wos[idx].status=newStatus;
+  wos[idx].notes=wos[idx].notes||[];
+  wos[idx].notes.push({text:'Status updated to: '+cfg.label,by:user.name,at:new Date().toISOString()});
+  saveWOs(wos);
+  currentWO=wos[idx];
+  closeDetailModal();
+  renderWOList();
+  updateWOStats();
+  showToast('✓','Status updated: '+cfg.label);
+}
+
+function cancelWO(id){
+  var wos=getWOs();
+  var idx=wos.findIndex(function(w){return w.id===id;});
+  if(idx===-1)return;
+  wos[idx].status='cancelled';
+  wos[idx].notes=wos[idx].notes||[];
+  wos[idx].notes.push({text:'Work Order cancelled.',by:user.name,at:new Date().toISOString()});
+  saveWOs(wos);
+  closeDetailModal();
+  renderWOList();
+  updateWOStats();
+  showToast('🚫','Work Order cancelled.');
+}
+
+// Close on overlay click
+['woModal','detailModal'].forEach(function(id){
+  document.getElementById(id).addEventListener('click',function(e){
+    if(e.target===this){closeWOModal();closeDetailModal();}
+  });
+});
+
+// ── Toast ──────────────────────────────────────────────────
+var toastTimer;
+function showToast(icon,msg){
+  clearTimeout(toastTimer);
+  var el=document.getElementById('toast');
+  document.getElementById('toastIcon').textContent=icon;
+  document.getElementById('toastMsg').textContent=msg;
+  el.style.opacity='1';el.style.transform='translateY(0)';
+  toastTimer=setTimeout(function(){el.style.opacity='0';el.style.transform='translateY(10px)';},2800);
+}
+</script>
+</body>
+</html>
