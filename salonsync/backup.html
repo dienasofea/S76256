@@ -1,0 +1,1327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SalonSync — Salon & Spa Management Platform</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --green-dark: #1a3a2a;
+  --green-main: #2d6649;
+  --green-mid:  #3d8c60;
+  --green-light:#e8f4ee;
+  --green-pale: #f3f9f5;
+  --gold:       #c8a96e;
+  --text:       #1a1a1a;
+  --muted:      #6b7280;
+  --border:     #e5e7eb;
+  --white:      #ffffff;
+  --red:        #e84040;
+  --star:       #f59e0b;
+  --radius:     14px;
+  --shadow:     0 4px 24px rgba(0,0,0,0.08);
+  --shadow-lg:  0 12px 40px rgba(0,0,0,0.14);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{
+  font-family:'DM Sans',sans-serif;
+  background:#f0f4f1;
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+}
+/* PHONE SHELL */
+.phone{
+  width:390px;
+  min-height:844px;
+  background:var(--white);
+  border-radius:44px;
+  box-shadow:0 30px 80px rgba(0,0,0,0.22), 0 0 0 10px #111, 0 0 0 12px #333;
+  overflow:hidden;
+  position:relative;
+  display:flex;
+  flex-direction:column;
+}
+/* STATUS BAR */
+.status-bar{
+  background:var(--green-dark);
+  padding:12px 24px 6px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  flex-shrink:0;
+}
+.status-time{font-size:15px;font-weight:600;color:#fff;letter-spacing:0.3px;}
+.status-icons{display:flex;gap:6px;align-items:center;}
+.status-icons span{font-size:12px;color:#fff;}
+
+/* SCREENS */
+.screen{
+  display:none;
+  flex:1;
+  flex-direction:column;
+  overflow:hidden;
+  animation:fadeIn 0.3s ease;
+}
+.screen.active{display:flex;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* SCROLL AREA */
+.scroll-area{
+  flex:1;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  padding-bottom:80px;
+}
+.scroll-area::-webkit-scrollbar{display:none;}
+
+/* BOTTOM NAV */
+.bottom-nav{
+  position:absolute;
+  bottom:0; left:0; right:0;
+  background:var(--white);
+  border-top:1px solid var(--border);
+  display:flex;
+  padding:10px 0 20px;
+  z-index:100;
+}
+.nav-item{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:3px;
+  cursor:pointer;
+  transition:0.2s;
+}
+.nav-item .ni-icon{font-size:20px;}
+.nav-item .ni-label{font-size:10px;color:var(--muted);font-weight:500;}
+.nav-item.active .ni-label{color:var(--green-main);font-weight:600;}
+.nav-item.active .ni-icon{filter:drop-shadow(0 0 4px rgba(45,102,73,0.3));}
+
+/* TOP HEADER */
+.top-header{
+  background:var(--green-dark);
+  padding:16px 20px 20px;
+  color:white;
+}
+.top-header-row{display:flex;justify-content:space-between;align-items:center;}
+.greeting{font-size:12px;color:rgba(255,255,255,0.7);margin-bottom:2px;}
+.username{font-family:'Playfair Display',serif;font-size:22px;font-weight:700;}
+.avatar{width:40px;height:40px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;color:#fff;}
+
+/* SEARCH */
+.search-bar{
+  margin:14px 20px 0;
+  background:rgba(255,255,255,0.12);
+  border:1px solid rgba(255,255,255,0.2);
+  border-radius:30px;
+  padding:10px 16px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  color:rgba(255,255,255,0.6);
+  font-size:13px;
+  cursor:pointer;
+}
+.search-bar:hover{background:rgba(255,255,255,0.18);}
+
+/* PROMO BANNER */
+.promo-banner{
+  margin:16px 16px 0;
+  background:linear-gradient(135deg,var(--green-mid),var(--green-dark));
+  border-radius:16px;
+  padding:16px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  cursor:pointer;
+  transition:transform 0.2s;
+}
+.promo-banner:hover{transform:scale(1.01);}
+.promo-text .pt-label{font-size:10px;color:rgba(255,255,255,0.7);text-transform:uppercase;letter-spacing:1px;}
+.promo-text .pt-title{font-size:16px;font-weight:600;color:#fff;margin:2px 0;}
+.promo-text .pt-sub{font-size:12px;color:rgba(255,255,255,0.8);}
+.promo-btn{background:var(--gold);color:#fff;padding:8px 14px;border-radius:20px;font-size:12px;font-weight:600;border:none;cursor:pointer;white-space:nowrap;}
+
+/* SECTION HEADER */
+.section-header{display:flex;justify-content:space-between;align-items:center;padding:16px 16px 8px;}
+.section-title{font-size:14px;font-weight:600;color:var(--text);}
+.see-all{font-size:12px;color:var(--green-main);cursor:pointer;font-weight:500;}
+
+/* DISTRICT CHIPS */
+.chips-row{display:flex;gap:8px;padding:0 16px;overflow-x:auto;padding-bottom:4px;}
+.chips-row::-webkit-scrollbar{display:none;}
+.chip{padding:7px 16px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;white-space:nowrap;border:1.5px solid var(--border);background:var(--white);color:var(--muted);transition:0.2s;}
+.chip.active{background:var(--green-main);color:#fff;border-color:var(--green-main);}
+.chip:hover:not(.active){border-color:var(--green-main);color:var(--green-main);}
+
+/* SALON CARD */
+.salon-list{padding:8px 16px;}
+.salon-card{
+  background:var(--white);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:14px;
+  margin-bottom:10px;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  cursor:pointer;
+  transition:all 0.2s;
+  box-shadow:var(--shadow);
+}
+.salon-card:hover{border-color:var(--green-main);transform:translateX(3px);box-shadow:var(--shadow-lg);}
+.salon-icon{
+  width:48px;height:48px;border-radius:12px;
+  background:var(--green-light);
+  display:flex;align-items:center;justify-content:center;
+  font-size:22px;flex-shrink:0;
+}
+.salon-info{flex:1;}
+.salon-name{font-size:14px;font-weight:600;color:var(--text);margin-bottom:2px;}
+.salon-loc{font-size:11px;color:var(--muted);}
+.salon-rating{display:flex;align-items:center;gap:4px;margin-top:4px;}
+.salon-rating .star{color:var(--star);font-size:12px;}
+.salon-rating .rt{font-size:11px;font-weight:600;color:var(--text);}
+.salon-rating .rc{font-size:11px;color:var(--muted);}
+.badge-tag{padding:3px 9px;border-radius:20px;font-size:10px;font-weight:600;margin-top:4px;display:inline-block;}
+.badge-vendor{background:#e8f4ee;color:var(--green-main);}
+.badge-tutup{background:#fee2e2;color:var(--red);}
+.book-btn{
+  padding:8px 14px;border-radius:20px;font-size:12px;font-weight:600;
+  border:none;cursor:pointer;transition:all 0.2s;flex-shrink:0;
+}
+.book-btn.open{background:var(--green-main);color:#fff;}
+.book-btn.open:hover{background:var(--green-dark);}
+.book-btn.closed{background:#f3f4f6;color:var(--muted);}
+
+/* ══════════ SALON DETAIL SCREEN ══════════ */
+.salon-hero{
+  background:var(--green-dark);
+  padding:16px 16px 20px;
+  color:white;
+}
+.back-btn{
+  width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.15);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+  font-size:16px;margin-bottom:12px;border:none;color:#fff;
+  transition:background 0.2s;
+}
+.back-btn:hover{background:rgba(255,255,255,0.25);}
+.fav-btn{width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.15);border:none;color:#fff;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.salon-hero-row{display:flex;justify-content:space-between;align-items:flex-start;}
+.salon-hero-info{display:flex;align-items:center;gap:12px;}
+.salon-hero-icon{width:52px;height:52px;border-radius:14px;background:var(--green-mid);display:flex;align-items:center;justify-content:center;font-size:24px;}
+.salon-hero-name{font-family:'Playfair Display',serif;font-size:20px;font-weight:700;}
+.salon-hero-city{font-size:12px;color:rgba(255,255,255,0.7);margin-top:2px;}
+.hero-badges{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;}
+.hero-badge{padding:5px 12px;border-radius:20px;font-size:11px;font-weight:600;}
+.hb-vendor{background:rgba(200,169,110,0.25);color:var(--gold);border:1px solid rgba(200,169,110,0.3);}
+.hb-open{background:var(--green-mid);color:#fff;}
+.hero-address{font-size:12px;color:rgba(255,255,255,0.7);margin-top:8px;}
+.hero-rating{display:flex;align-items:center;gap:6px;margin-top:6px;}
+.hero-rating .star{color:var(--gold);}
+.hero-rating .rt{font-size:14px;font-weight:700;}
+.hero-rating .rc{font-size:12px;color:rgba(255,255,255,0.6);}
+
+/* TAB BAR */
+.tab-bar{
+  display:flex;
+  border-bottom:1px solid var(--border);
+  background:var(--white);
+  position:sticky;top:0;z-index:10;
+}
+.tab{
+  flex:1;padding:12px 4px;text-align:center;font-size:13px;font-weight:500;
+  color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:0.2s;
+}
+.tab.active{color:var(--green-main);border-bottom-color:var(--green-main);font-weight:600;}
+.tab:hover:not(.active){color:var(--text);}
+
+/* SERVICE SECTION */
+.svc-section-label{
+  font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;
+  color:var(--muted);padding:16px 16px 8px;
+}
+.svc-card{
+  margin:0 16px 12px;
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  overflow:hidden;
+  cursor:pointer;
+  transition:all 0.2s;
+  box-shadow:var(--shadow);
+}
+.svc-card:hover{border-color:var(--green-main);transform:scale(1.01);}
+
+.svc-img{
+  width:100%;height:140px;object-fit:cover;
+  background:linear-gradient(135deg,#c8d8cf,#a8c4b0);
+  display:flex;align-items:center;justify-content:center;
+  font-size:48px;
+}
+
+
+.svc-bottom{padding:12px;}
+.svc-name{font-size:14px;font-weight:600;color:var(--text);}
+.svc-duration{font-size:12px;color:var(--muted);margin-top:2px;}
+.svc-bottom-row{display:flex;justify-content:space-between;align-items:center;margin-top:8px;}
+.svc-price{font-size:16px;font-weight:700;color:var(--green-main);}
+.svc-book-tag{padding:4px 12px;border-radius:20px;font-size:11px;font-weight:600;background:var(--green-light);color:var(--green-main);cursor:pointer;}
+
+/* BOOKING SCREEN */
+.booking-header{
+  background:var(--green-dark);
+  padding:16px 20px 20px;
+  color:white;
+}
+.booking-title{font-family:'Playfair Display',serif;font-size:20px;font-weight:700;margin-top:12px;}
+.booking-sub{font-size:12px;color:rgba(255,255,255,0.7);margin-top:4px;}
+
+.booking-form{padding:16px;}
+.form-label{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;}
+.form-field{
+  width:100%;background:var(--green-pale);border:1px solid var(--border);border-radius:10px;
+  padding:12px 14px;font-size:14px;color:var(--text);font-family:'DM Sans',sans-serif;
+  outline:none;transition:0.2s;margin-bottom:14px;
+}
+.form-field:focus{border-color:var(--green-main);background:#fff;box-shadow:0 0 0 3px rgba(45,102,73,0.08);}
+select.form-field{cursor:pointer;}
+
+.date-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px;}
+.date-chip{
+  padding:10px 6px;border-radius:10px;text-align:center;cursor:pointer;
+  border:1.5px solid var(--border);background:var(--white);transition:0.2s;
+}
+.date-chip:hover{border-color:var(--green-main);}
+.date-chip.selected{background:var(--green-main);border-color:var(--green-main);}
+.date-chip .dc-day{font-size:10px;color:var(--muted);font-weight:500;}
+.date-chip .dc-num{font-size:16px;font-weight:700;color:var(--text);margin-top:2px;}
+.date-chip.selected .dc-day,.date-chip.selected .dc-num{color:#fff;}
+
+.time-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;}
+.time-chip{
+  padding:10px 4px;border-radius:10px;text-align:center;cursor:pointer;
+  border:1.5px solid var(--border);background:var(--white);font-size:13px;
+  font-weight:500;color:var(--text);transition:0.2s;
+}
+.time-chip:hover{border-color:var(--green-main);}
+.time-chip.selected{background:var(--green-main);border-color:var(--green-main);color:#fff;}
+
+.confirm-btn{
+  width:100%;padding:16px;border-radius:14px;border:none;cursor:pointer;
+  background:var(--green-main);color:#fff;font-size:16px;font-weight:600;
+  font-family:'DM Sans',sans-serif;transition:all 0.2s;margin-top:8px;
+}
+.confirm-btn:hover{background:var(--green-dark);transform:translateY(-1px);box-shadow:0 6px 20px rgba(45,102,73,0.3);}
+
+/* PRICING SCREEN */
+.pricing-header{
+  background:var(--green-dark);
+  padding:16px 20px 20px;color:white;
+}
+.pricing-title{font-family:'Playfair Display',serif;font-size:20px;font-weight:700;margin-top:12px;}
+.pricing-sub{font-size:12px;color:rgba(255,255,255,0.7);margin-top:4px;}
+
+/* CALCULATOR */
+.calc-box{
+  margin:16px;background:var(--green-pale);border:1px solid var(--border);border-radius:var(--radius);padding:16px;
+}
+.calc-title{font-size:12px;font-weight:700;color:var(--green-main);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;}
+.calc-row{display:flex;gap:10px;align-items:center;margin-bottom:10px;}
+.calc-field{
+  flex:1;background:var(--white);border:1px solid var(--border);border-radius:8px;
+  padding:8px 12px;font-size:13px;color:var(--text);outline:none;
+  font-family:'DM Sans',sans-serif;
+}
+.calc-select{
+  flex:1;background:var(--white);border:1px solid var(--border);border-radius:8px;
+  padding:8px 12px;font-size:13px;color:var(--text);outline:none;cursor:pointer;
+  font-family:'DM Sans',sans-serif;
+}
+.calc-result{background:var(--green-main);border-radius:8px;padding:12px;display:flex;justify-content:space-between;align-items:center;}
+.calc-result-label{font-size:12px;color:rgba(255,255,255,0.8);}
+.calc-result-amount{font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:#fff;}
+
+/* PLAN CARDS */
+.plan-card{
+  margin:0 16px 14px;border:1.5px solid var(--border);border-radius:var(--radius);overflow:hidden;
+  transition:all 0.2s;cursor:pointer;
+}
+.plan-card:hover{border-color:var(--green-main);box-shadow:var(--shadow-lg);}
+.plan-card.featured{border-color:var(--green-main);box-shadow:0 0 0 1px var(--green-main);}
+.plan-header{padding:16px;display:flex;justify-content:space-between;align-items:flex-start;}
+.plan-name{font-size:16px;font-weight:700;color:var(--text);}
+.plan-desc{font-size:11px;color:var(--muted);margin-top:2px;}
+.plan-price-wrap{text-align:right;}
+.plan-price{font-family:'Playfair Display',serif;font-size:26px;font-weight:700;color:var(--green-main);}
+.plan-period{font-size:11px;color:var(--muted);}
+.popular-tag{background:var(--green-main);color:#fff;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;text-align:center;margin:0 16px 8px;display:inline-block;}
+.plan-features{padding:0 16px 16px;}
+.plan-feature{display:flex;align-items:center;gap:8px;padding:5px 0;font-size:13px;color:var(--text);}
+.plan-feature .pf-icon{color:var(--green-main);font-size:14px;}
+.plan-btn{margin:0 16px 16px;width:calc(100% - 32px);padding:12px;border-radius:10px;border:none;cursor:pointer;font-size:14px;font-weight:600;font-family:'DM Sans',sans-serif;transition:0.2s;}
+.plan-btn.primary{background:var(--green-main);color:#fff;}
+.plan-btn.primary:hover{background:var(--green-dark);}
+.plan-btn.outline{background:var(--white);color:var(--green-main);border:1.5px solid var(--green-main);}
+.plan-btn.outline:hover{background:var(--green-pale);}
+.plan-btn.outline{background:var(--green-main);color:#fff;}
+.plan-btn.outline:hover{background:var(--green-dark);}
+
+/* SUCCESS / CONFIRMATION */
+.success-screen{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:32px 24px;text-align:center;background:var(--white);
+}
+.success-icon{
+  width:80px;height:80px;border-radius:50%;background:var(--green-light);
+  display:flex;align-items:center;justify-content:center;font-size:36px;margin-bottom:20px;
+  animation:pop 0.5s cubic-bezier(0.175,0.885,0.32,1.275);
+}
+@keyframes pop{from{transform:scale(0)}to{transform:scale(1)}}
+.success-title{font-family:'Playfair Display',serif;font-size:24px;font-weight:700;color:var(--green-dark);margin-bottom:8px;}
+.success-sub{font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:28px;}
+.booking-ref{
+  background:var(--green-pale);border:1px solid var(--green-light);border-radius:12px;
+  padding:16px 24px;margin-bottom:28px;
+}
+.ref-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;}
+.ref-num{font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:var(--green-main);margin-top:4px;}
+.back-home-btn{
+  width:100%;padding:14px;border-radius:12px;border:none;cursor:pointer;
+  background:var(--green-main);color:#fff;font-size:15px;font-weight:600;
+  font-family:'DM Sans',sans-serif;transition:0.2s;
+}
+.back-home-btn:hover{background:var(--green-dark);}
+
+/* PROFILE SCREEN */
+.profile-hero{
+  background:linear-gradient(160deg,var(--green-dark),var(--green-mid));
+  padding:24px 20px 32px;text-align:center;color:#fff;
+}
+.profile-avatar{width:72px;height:72px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:700;margin:0 auto 12px;border:3px solid rgba(255,255,255,0.3);}
+.profile-name{font-family:'Playfair Display',serif;font-size:22px;font-weight:700;}
+.profile-email{font-size:13px;color:rgba(255,255,255,0.7);margin-top:4px;}
+
+.profile-section{padding:16px;}
+.profile-menu-item{
+  display:flex;align-items:center;gap:14px;padding:14px 16px;
+  background:var(--white);border:1px solid var(--border);border-radius:12px;
+  margin-bottom:10px;cursor:pointer;transition:0.2s;
+}
+.profile-menu-item:hover{border-color:var(--green-main);background:var(--green-pale);}
+.pmi-icon{width:38px;height:38px;border-radius:10px;background:var(--green-pale);display:flex;align-items:center;justify-content:center;font-size:18px;}
+.pmi-text{flex:1;}
+.pmi-label{font-size:14px;font-weight:500;color:var(--text);}
+.pmi-sub{font-size:12px;color:var(--muted);margin-top:2px;}
+.pmi-arrow{font-size:16px;color:var(--muted);}
+
+/* MY BOOKINGS SCREEN */
+.mybk-header{background:var(--green-dark);padding:16px 20px 20px;color:#fff;}
+.mybk-title{font-family:'Playfair Display',serif;font-size:20px;font-weight:700;margin-top:12px;}
+
+.bk-card{
+  margin:12px 16px 0;background:var(--white);border:1px solid var(--border);
+  border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);
+}
+.bk-card-top{padding:14px;display:flex;gap:12px;align-items:flex-start;}
+.bk-icon{width:44px;height:44px;border-radius:12px;background:var(--green-light);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+.bk-info{flex:1;}
+.bk-salon{font-size:14px;font-weight:600;color:var(--text);}
+.bk-service{font-size:12px;color:var(--muted);margin-top:2px;}
+.bk-status{padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700;margin-top:6px;display:inline-block;}
+.bk-confirmed{background:#e8f4ee;color:var(--green-main);}
+.bk-pending{background:#fef3c7;color:#92400e;}
+.bk-card-bottom{border-top:1px solid var(--border);padding:10px 14px;display:flex;justify-content:space-between;align-items:center;background:var(--green-pale);}
+.bk-datetime{font-size:12px;color:var(--muted);}
+.bk-price{font-size:14px;font-weight:700;color:var(--green-main);}
+
+/* SEARCH SCREEN */
+.search-screen-header{background:var(--green-dark);padding:16px 20px 20px;color:#fff;}
+.search-input-wrap{margin:10px 0 0;display:flex;gap:10px;align-items:center;}
+.search-inp{
+  flex:1;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.25);
+  border-radius:30px;padding:10px 16px;color:#fff;font-size:14px;font-family:'DM Sans',sans-serif;
+  outline:none;
+}
+.search-inp::placeholder{color:rgba(255,255,255,0.5);}
+.search-inp:focus{background:rgba(255,255,255,0.22);}
+
+.filter-row{display:flex;gap:8px;padding:12px 16px 4px;overflow-x:auto;}
+.filter-row::-webkit-scrollbar{display:none;}
+.filter-chip{
+  padding:7px 16px;border-radius:20px;font-size:12px;font-weight:500;
+  white-space:nowrap;cursor:pointer;border:1.5px solid var(--border);
+  background:var(--white);color:var(--muted);transition:0.2s;flex-shrink:0;
+}
+.filter-chip.active{background:var(--green-main);color:#fff;border-color:var(--green-main);}
+
+/* LOCATION SCREEN */
+.loc-section{padding:16px;}
+.loc-map{
+  background:linear-gradient(135deg,#c8d8cf,#a8c4b0);
+  border-radius:var(--radius);height:180px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:40px;margin-bottom:16px;border:1px solid var(--border);
+}
+.loc-item{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--border);}
+.loc-icon{font-size:20px;margin-top:2px;}
+.loc-info .loc-label{font-size:13px;font-weight:500;color:var(--text);}
+.loc-info .loc-val{font-size:12px;color:var(--muted);margin-top:2px;line-height:1.5;}
+
+/* REVIEW SECTION */
+.review-summary{padding:16px;display:flex;gap:20px;align-items:center;}
+.review-big{font-family:'Playfair Display',serif;font-size:48px;font-weight:700;color:var(--green-main);}
+.stars-bar{display:flex;gap:4px;}
+.stars-bar span{color:var(--star);font-size:18px;}
+.review-count{font-size:13px;color:var(--muted);}
+
+.review-card{margin:0 16px 12px;background:var(--green-pale);border-radius:12px;padding:14px;}
+.rc-name{font-size:13px;font-weight:600;color:var(--text);}
+.rc-stars{display:flex;gap:2px;margin:4px 0;}
+.rc-stars span{color:var(--star);font-size:12px;}
+.rc-text{font-size:12px;color:var(--muted);line-height:1.6;}
+.rc-date{font-size:11px;color:var(--muted);margin-top:6px;}
+
+/* TOOLTIPS */
+.toast{
+  position:fixed;bottom:100px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:var(--green-dark);color:#fff;padding:10px 20px;border-radius:30px;
+  font-size:13px;font-weight:500;opacity:0;transition:all 0.3s;pointer-events:none;
+  z-index:999;white-space:nowrap;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <!-- STATUS BAR -->
+  <div class="status-bar">
+    <span class="status-time">9:41</span>
+    <div class="status-icons">
+      <span>●●●</span>
+      <span>WiFi</span>
+      <span>🔋</span>
+    </div>
+  </div>
+
+  <!-- ════════ SCREEN 1: HOME ════════ -->
+  <div class="screen active" id="screen-home">
+    <div class="top-header">
+      <div class="top-header-row">
+        <div>
+          <div class="greeting">Selamat datang</div>
+          <div class="username">Siti Aminah ✂️</div>
+        </div>
+        <div class="avatar">SA</div>
+      </div>
+      <div class="search-bar" onclick="showScreen('screen-search')">
+        🔍 &nbsp;Cari salon rambut di Terengganu...
+      </div>
+    </div>
+
+    <div class="scroll-area">
+      <div class="promo-banner" onclick="showScreen('screen-pricing')">
+        <div class="promo-text">
+          <div class="pt-label">Tawaran Khas</div>
+          <div class="pt-title">Langgan Pro, jimat</div>
+          <div class="pt-sub">sehingga 30% rawatan</div>
+        </div>
+        <button class="promo-btn">Lihat ↗</button>
+      </div>
+
+      <div class="section-header">
+        <div class="section-title">Daerah</div>
+      </div>
+      <div class="chips-row">
+        <!--<div class="chip active" onclick="selectChip(this)">+ Semua</div>
+        <div class="chip" onclick="selectChip(this)">K. Terengganu</div>
+        <div class="chip" onclick="selectChip(this)">Kemaman</div>
+        <div class="chip" onclick="selectChip(this)">Dungun</div>
+        <div class="chip" onclick="selectChip(this)">Marang</div>-->
+        <div class="chip active" data-filter="semua" onclick="selectChip(this)">+ Semua</div>
+        <div class="chip" data-filter="kterengganu" onclick="selectChip(this)">K. Terengganu</div>
+        <div class="chip" data-filter="kemaman" onclick="selectChip(this)">Kemaman</div>
+        <div class="chip" data-filter="dungun" onclick="selectChip(this)">Dungun</div>
+        <div class="chip" data-filter="marang" onclick="selectChip(this)">Marang</div>
+      </div>
+
+      <div class="section-header" style="margin-top:8px">
+        <div class="section-title">Salon Rambut — Vendor Tempatan</div>
+        <div class="see-all" onclick="showScreen('screen-search')">Lihat semua</div>
+      </div>
+
+      <div class="salon-list">
+
+          <div class="salon-card" data-location="kterengganu" onclick="showScreen('screen-salon')">
+            <div class="salon-icon">
+              <img src="serojasalon.jpg" alt="seroja"
+                  style="width:100%;height:100%;object-fit:cover;border-radius:12px;display:block;"/>
+            </div>
+            <div class="salon-info">
+              <div class="salon-name">Seroja Hair Salon</div>
+              <div class="salon-loc">Kuala Terengganu • 1.2 km</div>
+              <div class="salon-rating">
+                <span class="star">★</span>
+                <span class="rt">4.9</span>
+                <span class="rc">(138 ulasan)</span>
+              </div>
+              <span class="badge-tag badge-vendor">Vendor Tempatan</span>
+            </div>
+            <button class="book-btn open" onclick="event.stopPropagation();showScreen('screen-booking')">Tempah</button>
+          </div>
+
+          <!-- Mahkota -->
+          <div class="salon-card" data-location="kemaman" onclick="showScreen('screen-salon2')">
+            <div class="salon-icon">
+              <img src="mahkotaspa.avif" alt="mahkota"
+                  style="width:100%;height:100%;object-fit:cover;border-radius:12px;display:block;"/>
+            </div>
+            <div class="salon-info">
+              <div class="salon-name">Mahkota Hair Studio</div>
+              <div class="salon-loc">Kemaman • 3.4 km</div>
+              <div class="salon-rating">
+                <span class="star">★</span>
+                <span class="rt">4.7</span>
+                <span class="rc">(95 ulasan)</span>
+              </div>
+              <span class="badge-tag badge-vendor">Vendor Tempatan</span>
+            </div>
+            <button class="book-btn open" onclick="event.stopPropagation();showScreen('screen-booking')">Tempah</button>
+          </div>
+
+          <!-- Intan -->
+          <div class="salon-card" data-location="dungun" ="rambut" onclick="showScreen('screen-salon')">
+            <div class="salon-icon">💎</div>
+            <div class="salon-info">
+              <div class="salon-name">Intan Hair Gallery</div>
+              <div class="salon-loc">Dungun • 5.8 km</div>
+              <div class="salon-rating">
+                <span class="star">★</span>
+                <span class="rt">4.6</span>
+                <span class="rc">(72 ulasan)</span>
+              </div>
+              <span class="badge-tag badge-vendor">Vendor Tempatan</span>
+            </div>
+            <button class="book-btn closed">Tutup</button>
+          </div>
+
+          <!-- Melati -->
+          <div class="salon-card" data-location="marang" onclick="showScreen('screen-salon')">
+            <div class="salon-icon">🌺</div>
+            <div class="salon-info">
+              <div class="salon-name">Melati Spa & Salon</div>
+              <div class="salon-loc">Marang • 7.1 km</div>
+              <div class="salon-rating">
+                <span class="star">★</span>
+                <span class="rt">4.8</span>
+                <span class="rc">(54 ulasan)</span>
+              </div>
+              <span class="badge-tag badge-vendor">Vendor Tempatan</span>
+            </div>
+            <button class="book-btn open" onclick="event.stopPropagation();showScreen('screen-booking')">Tempah</button>
+          </div>
+        </div>
+      </div>
+
+    <div class="bottom-nav">
+      <div class="nav-item active" onclick="switchNav(this,'screen-home')"><span class="ni-icon">🏠</span><span class="ni-label">Utama</span></div>
+      <div class="nav-item" onclick="switchNav(this,'screen-search')"><span class="ni-icon">🔍</span><span class="ni-label">Cari</span></div>
+      <div class="nav-item" onclick="switchNav(this,'screen-mybookings')"><span class="ni-icon">📅</span><span class="ni-label">Tempah</span></div>
+      <div class="nav-item" onclick="switchNav(this,'screen-profile')"><span class="ni-icon">👤</span><span class="ni-label">Profil</span></div>
+    </div>
+  </div>
+
+  <!-- ════════ SCREEN 2: SALON DETAIL ════════ -->
+  <div class="screen" id="screen-salon">
+    <div class="salon-hero">
+      <div style="display:flex;justify-content:space-between">
+        <button class="back-btn" onclick="goBack()">←</button>
+        <button class="fav-btn" onclick="toggleFav(this)">🤍</button>
+      </div>
+      <div class="salon-hero-row">
+        <div class="salon-hero-info">
+          <div class="salon-hero-icon">
+            <img src="serojasalon.jpg" alt="seroja" 
+                style="width:100%;height:100%;object-fit:cover;border-radius:14px;display:block;"/>
+          </div>
+          <div>
+            <div class="salon-hero-name">Seroja Hair Salon</div>
+            <div class="salon-hero-city">Kuala Terengganu</div>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">
+        <div class="hero-rating">
+          <span class="star">★</span>
+          <span class="rt">4.9</span>
+          <span class="rc">(138 ulasan)</span>
+        </div>
+      </div>
+      <div class="hero-badges">
+        <span class="hero-badge hb-vendor">⭐ Vendor Tempatan</span>
+        <span class="hero-badge hb-open">Buka 9am–7pm</span>
+      </div>
+      <div class="hero-address">📍 Jln Sultan Zainal Abidin, K. Terengganu</div>
+    </div>
+
+    <div class="tab-bar">
+      <div class="tab active" onclick="switchTab(this,'tab-rawatan')">Rawatan</div>
+      <div class="tab" onclick="switchTab(this,'tab-lokasi')">Lokasi</div>
+      <div class="tab" onclick="switchTab(this,'tab-ulasan')">Ulasan</div>
+    </div>
+
+    <div class="scroll-area" id="tab-rawatan">
+      <div class="svc-section-label">POTONG & STYLING</div>
+
+      <div class="svc-card" onclick="showScreen('screen-booking')">
+        <img class="svc-img" src="haircut1.webp" alt="Potong Rambut Wanita"/>
+        <div class="svc-bottom">
+          <div class="svc-name">Potong Rambut Wanita</div>
+          <div class="svc-duration">30–45 min</div>
+          <div class="svc-bottom-row">
+            <span class="svc-price">RM 25</span>
+            <span class="svc-book-tag">Tempah ✓</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="svc-card" onclick="showScreen('screen-booking')">
+        <img class="svc-img" src="haircut11.webp" alt="Potong Rambut Lelaki"/>
+        <div class="svc-bottom">
+          <div class="svc-name">Potong Rambut Lelaki</div>
+          <div class="svc-duration">20–30 min</div>
+          <div class="svc-bottom-row">
+            <span class="svc-price">RM 15</span>
+            <span class="svc-book-tag">Tempah ✓</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="svc-section-label">RAWATAN & COLOURING</div>
+
+      <div class="svc-card" onclick="showScreen('screen-booking')">
+        <img class="svc-img" src="keratin1.webp" alt="Keratin Treatment"/>
+        <div class="svc-bottom">
+          <div class="svc-name">Keratin Treatment</div>
+          <div class="svc-duration">90–120 min</div>
+          <div class="svc-bottom-row">
+            <span class="svc-price">RM 180</span>
+            <span class="svc-book-tag">Tempah ✓</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="svc-card" onclick="showScreen('screen-booking')">
+        <img class="svc-img" src="haircolouring1.webp" alt="Hair Colouring"/>
+        <div class="svc-bottom">
+          <div class="svc-name">Colouring Rambut</div>
+          <div class="svc-duration">60–90 min</div>
+          <div class="svc-bottom-row">
+            <span class="svc-price">RM 120</span>
+            <span class="svc-book-tag">Tempah ✓</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="svc-section-label">SPA & RELAXATION</div>
+      <div class="svc-card" onclick="showScreen('screen-booking')">
+         <img class="svc-img" src="hairspatreatment1.jpg" alt="Hair Spa Treatment"/>
+        <div class="svc-bottom">
+          <div class="svc-name">Head Spa Treatment</div>
+          <div class="svc-duration">45–60 min</div>
+          <div class="svc-bottom-row">
+            <span class="svc-price">RM 90</span>
+            <span class="svc-book-tag">Tempah ✓</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LOKASI TAB -->
+    <div class="scroll-area" id="tab-lokasi" style="display:none">
+      <div class="loc-section">
+        <div class="loc-map">🗺️</div>
+        <div class="loc-item"><span class="loc-icon">📍</span><div class="loc-info"><div class="loc-label">Alamat</div><div class="loc-val">Jln Sultan Zainal Abidin,<br>20000 Kuala Terengganu, Terengganu</div></div></div>
+        <div class="loc-item"><span class="loc-icon">🕐</span><div class="loc-info"><div class="loc-label">Waktu Operasi</div><div class="loc-val">Isnin – Sabtu: 9:00 pagi – 7:00 petang<br>Ahad: 10:00 pagi – 5:00 petang</div></div></div>
+        <div class="loc-item"><span class="loc-icon">📞</span><div class="loc-info"><div class="loc-label">No. Telefon</div><div class="loc-val">09-622 1234</div></div></div>
+        <div class="loc-item"><span class="loc-icon">🚗</span><div class="loc-info"><div class="loc-label">Jarak</div><div class="loc-val">1.2 km dari lokasi anda</div></div></div>
+      </div>
+    </div>
+
+    <!-- ULASAN TAB -->
+    <div class="scroll-area" id="tab-ulasan" style="display:none">
+      <div class="review-summary">
+        <div>
+          <div class="review-big">4.9</div>
+          <div class="stars-bar"><span>★</span><span>★</span><span>★</span><span>★</span><span>★</span></div>
+          <div class="review-count">138 ulasan</div>
+        </div>
+      </div>
+      <div class="review-card"><div class="rc-name">Nurul Ain</div><div class="rc-stars"><span>★</span><span>★</span><span>★</span><span>★</span><span>★</span></div><div class="rc-text">Servis sangat bagus! Potongan rambut cantik dan stylist sangat profesional. Tempat bersih dan selesa.</div><div class="rc-date">2 hari lepas</div></div>
+      <div class="review-card"><div class="rc-name">Fatimah Z.</div><div class="rc-stars"><span>★</span><span>★</span><span>★</span><span>★</span><span>★</span></div><div class="rc-text">Paling suka head spa treatment di sini. Rasa relax gila lepas tu. Akan datang lagi!</div><div class="rc-date">1 minggu lepas</div></div>
+      <div class="review-card"><div class="rc-name">Siti R.</div><div class="rc-stars"><span>★</span><span>★</span><span>★</span><span>★</span><span>★</span></div><div class="rc-text">Keratin treatment yang best! Rambut licin dan cantik. Staf sengaja ramah mesra. Highly recommended!</div><div class="rc-date">2 minggu lepas</div></div>
+    </div>
+
+    <div class="bottom-nav">
+      <div class="nav-item" onclick="switchNav(this,'screen-home')"><span class="ni-icon">🏠</span><span class="ni-label">Utama</span></div>
+      <div class="nav-item" onclick="switchNav(this,'screen-search')"><span class="ni-icon">🔍</span><span class="ni-label">Cari</span></div>
+      <div class="nav-item active" onclick="showScreen('screen-booking')"><span class="ni-icon">📅</span><span class="ni-label">Tempah</span></div>
+      <div class="nav-item" onclick="switchNav(this,'screen-profile')"><span class="ni-icon">👤</span><span class="ni-label">Profil</span></div>
+    </div>
+  </div>
+
+  <!-- Salon 2 detail (Mahkota) -->
+  <div class="screen" id="screen-salon2">
+    <div class="salon-hero">
+      <div style="display:flex;justify-content:space-between">
+        <button class="back-btn" onclick="goBack()">←</button>
+        <button class="fav-btn" onclick="toggleFav(this)">🤍</button>
+      </div>
+      <div class="salon-hero-info">
+        <div class="salon-hero-icon">
+            <img src="mahkotaspa.avif" alt="mahkota" 
+                style="width:100%;height:100%;object-fit:cover;border-radius:14px;display:block;"/>
+          </div>
+        <div>
+          <div class="salon-hero-name">Mahkota Hair Studio</div>
+          <div class="salon-hero-city">Kemaman</div>
+        </div>
+      </div>
+      <div class="hero-rating" style="margin-top:10px">
+        <span class="star">★</span><span class="rt">4.7</span><span class="rc">(95 ulasan)</span>
+      </div>
+      <div class="hero-badges">
+        <span class="hero-badge hb-vendor">⭐ Vendor Tempatan</span>
+        <span class="hero-badge hb-open">Buka 10am–8pm</span>
+      </div>
+      <div class="hero-address">📍 Jln Kemaman-Chukai, Kemaman</div>
+    </div>
+    <div class="tab-bar">
+      <div class="tab active">Rawatan</div><div class="tab">Lokasi</div><div class="tab">Ulasan</div>
+    </div>
+    <div class="scroll-area">
+      <div class="svc-section-label">POTONG & STYLING</div>
+      <div class="svc-card" onclick="showScreen('screen-booking')">
+
+         <img class="svc-img" src="haircut2.webp" alt="Potong Rambut Wanita"/>
+      <div class="svc-bottom"><div class="svc-name">Potong Rambut Wanita</div>
+      <div class="svc-duration">30–45 min</div><div class="svc-bottom-row"><span class="svc-price">RM 30</span><span class="svc-book-tag">Tempah ✓</span></div></div></div>
+
+      <div class="svc-card" onclick="showScreen('screen-booking')">
+        <img class="svc-img" src="blowdry1.webp" alt="Blow Dry"/>
+        <div class="svc-bottom"><div class="svc-name">Blow Dry & Styling</div><div class="svc-duration">30–45 min</div>
+        <div class="svc-bottom-row"><span class="svc-price">RM 45</span><span class="svc-book-tag">Tempah ✓</span></div></div></div>
+    </div>
+    <div class="bottom-nav">
+      <div class="nav-item" onclick="switchNav(this,'screen-home')"><span class="ni-icon">🏠</span><span class="ni-label">Utama</span></div>
+      <div class="nav-item" onclick="switchNav(this,'screen-search')"><span class="ni-icon">🔍</span><span class="ni-label">Cari</span></div>
+      <div class="nav-item active" onclick="showScreen('screen-booking')"><span class="ni-icon">📅</span><span class="ni-label">Tempah</span></div>
+      <div class="nav-item" onclick="switchNav(this,'screen-profile')"><span class="ni-icon">👤</span><span class="ni-label">Profil</span></div>
+    </div>
+  </div>
+
+  <!-- ════════ SCREEN 3: BOOKING ════════ -->
+  <div class="screen" id="screen-booking">
+    <div class="booking-header">
+      <button class="back-btn" onclick="goBack()">←</button>
+      <div class="booking-title">Buat Tempahan</div>
+      <div class="booking-sub">Seroja Hair Salon • Kuala Terengganu</div>
+    </div>
+
+    <div class="scroll-area">
+      <div class="booking-form">
+        <div class="form-label">Pilih Servis</div>
+        <select class="form-field">
+          <option>Potong Rambut Wanita — RM 25</option>
+          <option>Potong Rambut Lelaki — RM 15</option>
+          <option>Keratin Treatment — RM 180</option>
+          <option>Colouring Rambut — RM 120</option>
+          <option>Head Spa Treatment — RM 90</option>
+        </select>
+
+        <div class="form-label">Nama Pelanggan</div>
+        <input class="form-field" type="text" placeholder="Nama penuh anda..." value="Siti Aminah"/>
+
+        <div class="form-label">No. Telefon</div>
+        <input class="form-field" type="tel" placeholder="e.g. 011-1234 5678" value="011-2345 6789"/>
+
+        <div class="form-label">Pilih Tarikh</div>
+        <div class="date-grid">
+          <div class="date-chip" onclick="selDate(this)"><div class="dc-day">Sen</div><div class="dc-num">16</div></div>
+          <div class="date-chip selected" onclick="selDate(this)"><div class="dc-day">Sel</div><div class="dc-num">17</div></div>
+          <div class="date-chip" onclick="selDate(this)"><div class="dc-day">Rab</div><div class="dc-num">18</div></div>
+          <div class="date-chip" onclick="selDate(this)"><div class="dc-day">Kha</div><div class="dc-num">19</div></div>
+        </div>
+
+        <div class="form-label">Pilih Masa</div>
+        <div class="time-grid">
+          <div class="time-chip" onclick="selTime(this)">9:00 am</div>
+          <div class="time-chip selected" onclick="selTime(this)">10:00 am</div>
+          <div class="time-chip" onclick="selTime(this)">11:00 am</div>
+          <div class="time-chip" onclick="selTime(this)">2:00 pm</div>
+          <div class="time-chip" onclick="selTime(this)">3:00 pm</div>
+          <div class="time-chip" onclick="selTime(this)">4:00 pm</div>
+        </div>
+
+        <div class="form-label">Kaedah Pembayaran</div>
+        <select class="form-field">
+          <option>💳 Online — FPX / Debit Card</option>
+          <option>📱 DuitNow QR</option>
+          <option>💵 Tunai di Kaunter</option>
+        </select>
+
+        <div class="form-label">Nota (pilihan)</div>
+        <input class="form-field" type="text" placeholder="Sebarang permintaan khas..."/>
+
+        <div style="background:var(--green-pale);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:16px;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:13px;"><span style="color:var(--muted)">Servis</span><span>Potong Rambut Wanita</span></div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:13px;"><span style="color:var(--muted)">Tarikh & Masa</span><span>Sel, 17 Mei • 10:00 am</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:14px;font-weight:700;border-top:1px solid var(--border);padding-top:8px;margin-top:4px;"><span>Jumlah</span><span style="color:var(--green-main)">RM 25.00</span></div>
+        </div>
+
+        <button class="confirm-btn" onclick="showScreen('screen-success')">✓ Sahkan Tempahan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════ SCREEN 4: SUCCESS ════════ -->
+  <div class="screen" id="screen-success">
+    <div style="background:var(--green-dark);padding:16px 20px 20px;color:#fff;flex-shrink:0;">
+      <div style="height:36px;"></div>
+    </div>
+    <div class="success-screen">
+      <div class="success-icon">✅</div>
+      <div class="success-title">Tempahan Berjaya!</div>
+      <div class="success-sub">Tempahan anda telah disahkan.<br>Kami akan hubungi anda untuk pengesahan akhir.</div>
+      <div class="booking-ref">
+        <div class="ref-label">No. Rujukan Tempahan</div>
+        <div class="ref-num">SS-2025-00147</div>
+      </div>
+      <div style="background:var(--green-pale);border-radius:12px;padding:14px;width:100%;margin-bottom:20px;font-size:13px;">
+        <div style="display:flex;gap:8px;margin-bottom:8px;"><span>📍</span><span><b>Seroja Hair Salon</b><br>Jln Sultan Zainal Abidin</span></div>
+        <div style="display:flex;gap:8px;margin-bottom:8px;"><span>📅</span><span>Selasa, 17 Mei 2025 • 10:00 am</span></div>
+        <div style="display:flex;gap:8px;"><span>✂️</span><span>Potong Rambut Wanita (30–45 min)</span></div>
+      </div>
+      <button class="back-home-btn" onclick="showScreen('screen-home')">← Kembali ke Utama</button>
+    </div>
+  </div>
+
+  <!-- ════════ SCREEN 5: SEARCH ════════ -->
+  <div class="screen" id="screen-search">
+    <div class="search-screen-header">
+      <div style="display:flex;gap:10px;align-items:center;">
+        <button class="back-btn" onclick="goBack()" style="flex-shrink:0">←</button>
+        <input class="search-inp" placeholder="Cari salon, servis, lokasi..." autofocus/>
+      </div>
+    </div>
+
+    <div class="scroll-area">
+      <div class="filter-row">
+        <div class="filter-chip active" data-filter="semua" onclick="selFilter(this)">Semua</div>
+        <div class="filter-chip" data-filter="rambut" onclick="selFilter(this)">Rambut</div>
+        <div class="filter-chip" data-filter="spa" onclick="selFilter(this)">Spa</div>
+        <div class="filter-chip" data-filter="kecantikan" onclick="selFilter(this)">Kecantikan</div>
+        <div class="filter-chip" data-filter="kuala terengganu" onclick="selFilter(this)">K. Terengganu</div>
+        <div class="filter-chip" data-filter="kemaman" onclick="selFilter(this)">Kemaman</div>
+      </div>
+
+      <div class="section-header">
+        <div class="section-title">Semua Salon (4)</div>
+      </div>
+      <div class="salon-list">
+           <div class="salon-card" onclick="showScreen('screen-salon')"></div>
+          <div class="salon-icon">
+            <img src="serojasalon.jpg" alt="seroja"
+                style="width:100%;height:100%;object-fit:cover;border-radius:12px;display:block;"/>
+          </div> 
+          <div class="salon-info"><div class="salon-name">Seroja Hair Salon</div><div class="salon-loc">Kuala Terengganu • 1.2 km</div><div class="salon-rating"><span class="star">★</span><span class="rt">4.9</span><span class="rc">(138)</span></div><span class="badge-tag badge-vendor">Vendor Tempatan</span></div>
+          <button class="book-btn open" onclick="event.stopPropagation();showScreen('screen-booking')">Tempah</button>
+        </div>
+        <div class="salon-card" onclick="showScreen('screen-salon2')">
+          <div class="salon-icon">
+            <img src="mahkotaspa.avif" alt="mahkota"
+                style="width:100%;height:100%;object-fit:cover;border-radius:12px;display:block;"/>
+          </div> 
+          <div class="salon-info"><div class="salon-name">Mahkota Hair Studio</div><div class="salon-loc">Kemaman • 3.4 km</div><div class="salon-rating"><span class="star">★</span><span class="rt">4.7</span><span class="rc">(95)</span></div><span class="badge-tag badge-vendor">Vendor Tempatan</span></div>
+          <button class="book-btn open" onclick="event.stopPropagation();showScreen('screen-booking')">Tempah</button>
+        </div>
+        <div class="salon-card" onclick="showScreen('screen-salon')">
+          <div class="salon-icon">💎</div>
+          <div class="salon-info"><div class="salon-name">Intan Hair Gallery</div><div class="salon-loc">Dungun • 5.8 km</div><div class="salon-rating"><span class="star">★</span><span class="rt">4.6</span><span class="rc">(72)</span></div><span class="badge-tag badge-vendor">Vendor Tempatan</span></div>
+          <button class="book-btn closed">Tutup</button>
+        </div>
+        <div class="salon-card" onclick="showScreen('screen-salon')">
+          <div class="salon-icon">🌺</div>
+          <div class="salon-info"><div class="salon-name">Melati Spa & Salon</div><div class="salon-loc">Marang • 7.1 km</div><div class="salon-rating"><span class="star">★</span><span class="rt">4.8</span><span class="rc">(54)</span></div><span class="badge-tag badge-vendor">Vendor Tempatan</span></div>
+          <button class="book-btn open" onclick="event.stopPropagation();showScreen('screen-booking')">Tempah</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="bottom-nav">
+      <div class="nav-item" onclick="switchNav(this,'screen-home')"><span class="ni-icon">🏠</span><span class="ni-label">Utama</span></div>
+      <div class="nav-item active" onclick="switchNav(this,'screen-search')"><span class="ni-icon">🔍</span><span class="ni-label">Cari</span></div>
+      <div class="nav-item" onclick="switchNav(this,'screen-mybookings')"><span class="ni-icon">📅</span><span class="ni-label">Tempah</span></div>
+      <div class="nav-item" onclick="switchNav(this,'screen-profile')"><span class="ni-icon">👤</span><span class="ni-label">Profil</span></div>
+    </div>
+  </div>
+
+  <!-- ════════ SCREEN 6: PRICING ════════ -->
+  <div class="screen" id="screen-pricing">
+    <div class="pricing-header">
+      <button class="back-btn" onclick="goBack()">←</button>
+      <div class="pricing-title">Pakej Langganan</div>
+      <div class="pricing-sub">Model recurring — bayaran bulanan</div>
+    </div>
+
+    <div class="scroll-area">
+      <!-- Calculator -->
+      <div class="calc-box">
+        <div class="calc-title">🧮 Kalkulator Pendapatan</div>
+        <div class="calc-row">
+          <div style="font-size:12px;color:var(--muted);min-width:70px;">Bilangan salon</div>
+          <input class="calc-field" type="number" value="50" oninput="calcRevenue()"/>
+          <select class="calc-select" onchange="calcRevenue()" id="calc-plan">
+            <option value="99">Basic — RM99</option>
+            <option value="199" selected>Standard — RM199</option>
+            <option value="399">Premium — RM399</option>
+          </select>
+        </div>
+        <div class="calc-result">
+          <span class="calc-result-label">Pendapatan / bulan</span>
+          <span class="calc-result-amount" id="calc-amount">RM 9,950</span>
+        </div>
+      </div>
+
+      <!-- Basic Plan -->
+      <div class="plan-card" onclick="showToastMsg('Pakej Basic dipilih!')">
+        <div class="plan-header">
+          <div><div class="plan-name">Basic</div><div class="plan-desc">Permulaan untuk salon baru</div></div>
+          <div class="plan-price-wrap"><div class="plan-price">RM 99</div><div class="plan-period">/bulan</div></div>
+        </div>
+        <div class="plan-features">
+          <div class="plan-feature"><span class="pf-icon">✓</span>Booking system</div>
+          <div class="plan-feature"><span class="pf-icon">✓</span>Customer management</div>
+          <div class="plan-feature"><span class="pf-icon">✓</span>Profil salon di platform</div>
+        </div>
+        <button class="plan-btn outline">Pilih Basic</button>
+      </div>
+
+      <!-- Standard Plan (Featured) -->
+      <div style="text-align:center;margin:4px 0">
+        <span class="popular-tag">⚡ Paling Popular</span>
+      </div>
+      <div class="plan-card featured" onclick="showToastMsg('Pakej Standard dipilih!')">
+        <div class="plan-header">
+          <div><div class="plan-name">Standard</div><div class="plan-desc">Untuk salon yang sedang berkembang</div></div>
+          <div class="plan-price-wrap"><div class="plan-price">RM 199</div><div class="plan-period">/bulan</div></div>
+        </div>
+        <div class="plan-features">
+          <div class="plan-feature"><span class="pf-icon">✓</span>Semua Basic +</div>
+          <div class="plan-feature"><span class="pf-icon">✓</span>Staff scheduling</div>
+          <div class="plan-feature"><span class="pf-icon">✓</span>Sales report</div>
+          <div class="plan-feature"><span class="pf-icon">✓</span>Notifikasi automatik</div>
+        </div>
+        <button class="plan-btn primary" onclick="event.stopPropagation();showToastMsg('Sedang memproses langganan...')">Langgan Sekarang ↗</button>
+      </div>
+
+      <!-- Premium Plan -->
+      <div class="plan-card" onclick="showToastMsg('Pakej Premium dipilih!')">
+        <div class="plan-header">
+          <div><div class="plan-name">Premium</div><div class="plan-desc">Untuk salon VIP & berskala besar</div></div>
+          <div class="plan-price-wrap"><div class="plan-price">RM 399</div><div class="plan-period">/bulan</div></div>
+        </div>
+        <div class="plan-features">
+          <div class="plan-feature"><span class="pf-icon">✓</span>Semua Standard +</div>
+          <div class="plan-feature"><span class="pf-icon">✓</span>Online payment integration</div>
+          <div class="plan-feature"><span class="pf-icon">✓</span>Advanced analytics</div>
+          <div class="plan-feature"><span class="pf-icon">✓</span>Featured listing — lebih visibility</div>
+        </div>
+        <button class="plan-btn outline">Ketahui Lebih Lanjut ↗</button>
+      </div>
+      <div style="height:16px;"></div>
+    </div>
+  </div>
+
+  <!-- ════════ SCREEN 7: MY BOOKINGS ════════ -->
+  <div class="screen" id="screen-mybookings">
+    <div class="mybk-header">
+      <div style="height:8px;"></div>
+      <div class="mybk-title">Tempahan Saya</div>
+    </div>
+
+    <div class="scroll-area">
+      <div style="padding:12px 16px 4px;display:flex;gap:8px;">
+        <div class="chip active" onclick="selectChip(this)" style="font-size:12px;">Akan Datang</div>
+        <div class="chip" onclick="selectChip(this)" style="font-size:12px;">Selesai</div>
+        <div class="chip" onclick="selectChip(this)" style="font-size:12px;">Dibatal</div>
+      </div>
+
+      <div class="bk-card" onclick="showToastMsg('Detail tempahan SS-2025-00147')">
+        <div class="bk-card-top">
+          <div class="salon-icon">
+            <img src="serojasalon.jpg" alt="seroja"
+                style="width:100%;height:100%;object-fit:cover;border-radius:12px;display:block;"/>
+          </div> 
+          <div class="bk-info">
+            <div class="bk-salon">Seroja Hair Salon</div>
+            <div class="bk-service">Potong Rambut Wanita</div>
+            <span class="bk-status bk-confirmed">✓ Disahkan</span>
+          </div>
+        </div>
+        <div class="bk-card-bottom">
+          <div class="bk-datetime">📅 Sel, 17 Mei 2025 • 10:00 am</div>
+          <div class="bk-price">RM 25</div>
+        </div>
+      </div>
+
+      <div class="bk-card" onclick="showToastMsg('Detail tempahan SS-2025-00148')">
+        <div class="bk-card-top">
+          <div class="bk-icon">🌺</div>
+          <div class="bk-info">
+            <div class="bk-salon">Melati Spa & Salon</div>
+            <div class="bk-service">Head Spa Treatment</div>
+            <span class="bk-status bk-pending">⏳ Menunggu Pengesahan</span>
+          </div>
+        </div>
+        <div class="bk-card-bottom">
+          <div class="bk-datetime">📅 Rab, 21 Mei 2025 • 2:00 pm</div>
+          <div class="bk-price">RM 90</div>
+        </div>
+      </div>
+
+      <div style="text-align:center;padding:28px 16px;">
+        <button class="confirm-btn" onclick="showScreen('screen-home')" style="max-width:220px;font-size:14px;padding:12px;">+ Buat Tempahan Baru</button>
+      </div>
+    </div>
+
+    <div class="bottom-nav">
+      <div class="nav-item" onclick="switchNav(this,'screen-home')"><span class="ni-icon">🏠</span><span class="ni-label">Utama</span></div>
+      <div class="nav-item" onclick="switchNav(this,'screen-search')"><span class="ni-icon">🔍</span><span class="ni-label">Cari</span></div>
+      <div class="nav-item active"><span class="ni-icon">📅</span><span class="ni-label">Tempah</span></div>
+      <div class="nav-item" onclick="switchNav(this,'screen-profile')"><span class="ni-icon">👤</span><span class="ni-label">Profil</span></div>
+    </div>
+  </div>
+
+  <!-- ════════ SCREEN 8: PROFILE ════════ -->
+  <div class="screen" id="screen-profile">
+    <div class="profile-hero">
+      <div class="profile-avatar">SA</div>
+      <div class="profile-name">Siti Aminah</div>
+      <div class="profile-email">siti.aminah@email.com</div>
+      <div style="display:flex;gap:16px;justify-content:center;margin-top:14px;">
+        <div style="text-align:center;"><div style="font-size:18px;font-weight:700;">3</div><div style="font-size:11px;color:rgba(255,255,255,0.7);">Tempahan</div></div>
+        <div style="width:1px;background:rgba(255,255,255,0.2);"></div>
+        <div style="text-align:center;"><div style="font-size:18px;font-weight:700;">2</div><div style="font-size:11px;color:rgba(255,255,255,0.7);">Salon Kegemaran</div></div>
+        <div style="width:1px;background:rgba(255,255,255,0.2);"></div>
+        <div style="text-align:center;"><div style="font-size:18px;font-weight:700;">RM135</div><div style="font-size:11px;color:rgba(255,255,255,0.7);">Jumlah Belanja</div></div>
+      </div>
+    </div>
+
+    <div class="scroll-area">
+      <div class="profile-section">
+        <div class="profile-menu-item" onclick="showScreen('screen-mybookings')">
+          <div class="pmi-icon">📅</div>
+          <div class="pmi-text"><div class="pmi-label">Tempahan Saya</div><div class="pmi-sub">Lihat semua tempahan anda</div></div>
+          <span class="pmi-arrow">›</span>
+        </div>
+        <div class="profile-menu-item" onclick="showToastMsg('Salon kegemaran anda')">
+          <div class="pmi-icon">❤️</div>
+          <div class="pmi-text"><div class="pmi-label">Salon Kegemaran</div><div class="pmi-sub">2 salon disimpan</div></div>
+          <span class="pmi-arrow">›</span>
+        </div>
+        <div class="profile-menu-item" onclick="showToastMsg('Maklumat akaun anda')">
+          <div class="pmi-icon">👤</div>
+          <div class="pmi-text"><div class="pmi-label">Maklumat Akaun</div><div class="pmi-sub">Kemaskini profil & kata laluan</div></div>
+          <span class="pmi-arrow">›</span>
+        </div>
+        <div class="profile-menu-item" onclick="showToastMsg('Tetapan notifikasi')">
+          <div class="pmi-icon">🔔</div>
+          <div class="pmi-text"><div class="pmi-label">Notifikasi</div><div class="pmi-sub">Urus pemberitahuan</div></div>
+          <span class="pmi-arrow">›</span>
+        </div>
+        <div class="profile-menu-item" onclick="showScreen('screen-pricing')">
+          <div class="pmi-icon">⭐</div>
+          <div class="pmi-text"><div class="pmi-label">Pakej Langganan</div><div class="pmi-sub">Lihat pakej SalonSync</div></div>
+          <span class="pmi-arrow">›</span>
+        </div>
+        <div class="profile-menu-item" onclick="showToastMsg('Tentang SalonSync v1.0')">
+          <div class="pmi-icon">ℹ️</div>
+          <div class="pmi-text"><div class="pmi-label">Tentang SalonSync</div><div class="pmi-sub">Versi 1.0 • UMT © 2025</div></div>
+          <span class="pmi-arrow">›</span>
+        </div>
+        <div class="profile-menu-item" onclick="showToastMsg('Log keluar...')" style="border-color:rgba(232,64,64,0.2);">
+          <div class="pmi-icon" style="background:#fee2e2;">🚪</div>
+          <div class="pmi-text"><div class="pmi-label" style="color:var(--red)">Log Keluar</div></div>
+          <span class="pmi-arrow">›</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="bottom-nav">
+      <div class="nav-item" onclick="switchNav(this,'screen-home')"><span class="ni-icon">🏠</span><span class="ni-label">Utama</span></div>
+      <div class="nav-item" onclick="switchNav(this,'screen-search')"><span class="ni-icon">🔍</span><span class="ni-label">Cari</span></div>
+      <div class="nav-item" onclick="switchNav(this,'screen-mybookings')"><span class="ni-icon">📅</span><span class="ni-label">Tempah</span></div>
+      <div class="nav-item active"><span class="ni-icon">👤</span><span class="ni-label">Profil</span></div>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+// ── Screen Navigation ─────────────────────────
+var historyStack = ['screen-home'];
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
+  document.getElementById(id).classList.add('active');
+  if (historyStack[historyStack.length-1] !== id) historyStack.push(id);
+}
+
+function goBack() {
+  if (historyStack.length > 1) {
+    historyStack.pop();
+    var prev = historyStack[historyStack.length-1];
+    document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
+    document.getElementById(prev).classList.add('active');
+  }
+}
+
+function switchNav(el, screenId) {
+  document.querySelectorAll('.nav-item').forEach(function(n){ n.classList.remove('active'); });
+  el.classList.add('active');
+  historyStack = [screenId];
+  showScreen(screenId);
+}
+
+// ── Tab switching inside salon detail ─────────
+function switchTab(el, tabId) {
+  // Deactivate all tabs
+  el.closest('.tab-bar').querySelectorAll('.tab').forEach(function(t){ t.classList.remove('active'); });
+  el.classList.add('active');
+  // Hide all scroll areas in this screen
+  var screen = el.closest('.screen');
+  screen.querySelectorAll('.scroll-area').forEach(function(a){ a.style.display = 'none'; });
+  var target = screen.querySelector('#'+tabId);
+  if (target) target.style.display = 'block';
+}
+
+// ── Chip selection ─────────────────────────────
+function selectChip(el) {
+  el.parentElement.querySelectorAll('.chip').forEach(function(c){ 
+    c.classList.remove('active'); 
+  });
+  el.classList.add('active');
+
+  if (el.closest('#screen-home')) {
+    var filter = el.getAttribute('data-filter');
+    var cards = document.querySelectorAll('#screen-home .salon-card');
+
+    cards.forEach(function(card) {
+      if (filter === 'semua') {
+        card.style.display = 'flex';
+      } else {
+        card.style.display = card.getAttribute('data-location') === filter ? 'flex' : 'none';
+      }
+    });
+  }
+}
+
+// ── Date selection ────────────────────────────
+function selDate(el) {
+  el.closest('.date-grid').querySelectorAll('.date-chip').forEach(function(d){ d.classList.remove('selected'); });
+  el.classList.add('selected');
+}
+
+// ── Time selection ────────────────────────────
+function selTime(el) {
+  el.closest('.time-grid').querySelectorAll('.time-chip').forEach(function(t){ t.classList.remove('selected'); });
+  el.classList.add('selected');
+}
+
+// ── Filter chip ───────────────────────────────
+function selFilter(el) {
+  el.closest('.filter-row').querySelectorAll('.filter-chip').forEach(function(c){ c.classList.remove('active'); });
+  el.classList.add('active');
+}
+
+function selFilter(el) {
+  // Update active chip
+  el.closest('.filter-row').querySelectorAll('.filter-chip').forEach(function(c){ 
+    c.classList.remove('active'); 
+  });
+  el.classList.add('active');
+
+  var filter = el.getAttribute('data-filter');
+  var cards = document.querySelectorAll('#screen-search .salon-card');
+  var visibleCount = 0;
+
+  cards.forEach(function(card) {
+    var loc = card.getAttribute('data-location');
+    var type = card.getAttribute('data-type');
+
+    var show = false;
+
+    if (filter === 'semua') {
+      show = true;
+    } else if (filter === 'kterengganu' || filter === 'kemaman' || filter === 'dungun' || filter === 'marang') {
+      show = loc === filter;
+    } else if (filter === 'rambut' || filter === 'spa' || filter === 'kecantikan') {
+      show = type === filter;
+    }
+
+    card.style.display = show ? 'flex' : 'none';
+    if (show) visibleCount++;
+  });
+
+  // Update count label
+  var countLabel = document.querySelector('#screen-search .section-title');
+  if (countLabel) {
+    countLabel.textContent = 'Semua Salon (' + visibleCount + ')';
+  }
+}
+
+// ── Fav toggle ────────────────────────────────
+function toggleFav(btn) {
+  btn.textContent = btn.textContent === '🤍' ? '❤️' : '🤍';
+  showToastMsg(btn.textContent === '❤️' ? 'Ditambah ke kegemaran!' : 'Dibuang dari kegemaran');
+}
+
+// ── Revenue calculator ────────────────────────
+function calcRevenue() {
+  var count = parseInt(document.querySelector('.calc-field').value) || 0;
+  var price = parseInt(document.getElementById('calc-plan').value) || 199;
+  var total = count * price;
+  document.getElementById('calc-amount').textContent = 'RM ' + total.toLocaleString('en-MY');
+}
+
+// ── Toast notification ─────────────────────────
+var _toastTimer;
+function showToastMsg(msg) {
+  clearTimeout(_toastTimer);
+  var el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  _toastTimer = setTimeout(function(){ el.classList.remove('show'); }, 2200);
+}
+
+// ── Clock update ──────────────────────────────
+function updateTime() {
+  var now = new Date();
+  var h = now.getHours().toString().padStart(2,'0');
+  var m = now.getMinutes().toString().padStart(2,'0');
+  document.querySelector('.status-time').textContent = h + ':' + m;
+}
+updateTime();
+setInterval(updateTime, 30000);
+</script>
+</body>
+</html>
